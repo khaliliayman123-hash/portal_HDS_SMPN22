@@ -51,9 +51,10 @@ export default function App() {
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
+    const duration = type === 'error' ? 12000 : 3000;
     setTimeout(() => {
-      setToast(null);
-    }, 3000);
+      setToast(prev => prev && prev.message === message ? null : prev);
+    }, duration);
   };
 
   // Navigations routing states
@@ -171,37 +172,116 @@ export default function App() {
     silent: boolean = false,
     localOnly: boolean = false
   ) => {
-    if (!silent) setIsLoading(true);
-    try {
-      const res = await apiService.saveSiswa(siswa, orangTua, kesehatan, ekonomi, psikologi, sosial, akademik, isNew, localOnly);
-      if (!silent) {
-        alert(res.message);
-        if (res.success) {
-          await loadDatabase(false, true);
-        }
+    // 1. Optimistically update local database state for instant UI update
+    setDb(prev => {
+      if (!prev) return prev;
+      let newSiswa = [...prev.siswa];
+      let newOrangTua = [...prev.orangTua];
+      let newKesehatan = [...prev.kesehatan];
+      let newEkonomi = [...prev.ekonomi];
+      let newPsikologi = [...prev.psikologi];
+      let newSosial = [...prev.sosial];
+      let newAkademik = [...prev.akademik];
+
+      if (isNew) {
+        newSiswa.push(siswa);
+        newOrangTua.push(orangTua);
+        newKesehatan.push(kesehatan);
+        newEkonomi.push(ekonomi);
+        newPsikologi.push(psikologi);
+        newSosial.push(sosial);
+        newAkademik.push(akademik);
+      } else {
+        newSiswa = newSiswa.map(s => s.id === siswa.id ? { ...s, ...siswa } : s);
+        newOrangTua = newOrangTua.map(o => o.id === orangTua.id ? { ...o, ...orangTua } : o);
+        newKesehatan = newKesehatan.map(k => k.id === kesehatan.id ? { ...k, ...kesehatan } : k);
+        newEkonomi = newEkonomi.map(e => e.id === ekonomi.id ? { ...e, ...ekonomi } : e);
+        newPsikologi = newPsikologi.map(p => p.id === psikologi.id ? { ...p, ...psikologi } : p);
+        newSosial = newSosial.map(s => s.id === sosial.id ? { ...s, ...sosial } : s);
+        newAkademik = newAkademik.map(a => a.id === akademik.id ? { ...a, ...akademik } : a);
       }
-      return res.success;
-    } catch (e: any) {
-      if (!silent) alert('Gagal menyimpan siswa: ' + e.toString());
-      return false;
-    } finally {
-      if (!silent) setIsLoading(false);
+
+      return {
+        ...prev,
+        siswa: newSiswa,
+        orangTua: newOrangTua,
+        kesehatan: newKesehatan,
+        ekonomi: newEkonomi,
+        psikologi: newPsikologi,
+        sosial: newSosial,
+        akademik: newAkademik
+      };
+    });
+
+    // 2. Save locally first (instantaneous)
+    await apiService.saveSiswa(siswa, orangTua, kesehatan, ekonomi, psikologi, sosial, akademik, isNew, true);
+
+    if (!silent) {
+      showToast('Menyimpan paket data siswa secara lokal...', 'info');
     }
+
+    // 3. Sync to remote Google Sheets in the background (asynchronously)
+    if (!localOnly && apiService.getGasUrl()) {
+      apiService.saveSiswa(siswa, orangTua, kesehatan, ekonomi, psikologi, sosial, akademik, isNew, false)
+        .then(res => {
+          if (res.success) {
+            showToast('Sinkronisasi Google Sheets berhasil!', 'success');
+          } else {
+            showToast(`Gagal sinkron Google Sheets: ${res.message || 'Koneksi ditolak.'}`, 'error');
+          }
+        })
+        .catch((err) => {
+          showToast(`Koneksi Google Sheets terputus: ${err.message || 'Error tidak diketahui.'}. Tersimpan di database lokal.`, 'error');
+        });
+    } else {
+      if (!silent) {
+        showToast('Siswa berhasil disimpan ke database lokal.', 'success');
+      }
+    }
+
+    return true;
   };
 
   const handleDeleteSiswa = async (id: string) => {
-    setIsLoading(true);
-    try {
-      const res = await apiService.deleteSiswa(id);
-      alert(res.message);
-      await loadDatabase(false, true);
-      return true;
-    } catch (e: any) {
-      alert('Gagal menghapus siswa: ' + e.toString());
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
+    // 1. Optimistically update local database state for instant UI update
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        siswa: prev.siswa.filter(s => s.id !== id),
+        orangTua: prev.orangTua.filter(o => o.id !== id),
+        kesehatan: prev.kesehatan.filter(k => k.id !== id),
+        ekonomi: prev.ekonomi.filter(e => e.id !== id),
+        psikologi: prev.psikologi.filter(p => p.id !== id),
+        sosial: prev.sosial.filter(s => s.id !== id),
+        akademik: prev.akademik.filter(a => a.id !== id),
+        prestasi: prev.prestasi.filter(p => p.siswaId !== id),
+        pelanggaran: prev.pelanggaran.filter(p => p.siswaId !== id),
+        konseling: prev.konseling.filter(c => c.siswaId !== id),
+        asesmen: prev.asesmen.filter(a => a.siswaId !== id),
+        homeVisit: prev.homeVisit.filter(h => h.siswaId !== id),
+        surat: prev.surat.filter(s => s.siswaId !== id),
+        dokumen: prev.dokumen.filter(d => d.siswaId !== id),
+        catatanPerkembangan: prev.catatanPerkembangan.filter(c => c.siswaId !== id)
+      };
+    });
+
+    showToast('Menghapus siswa...', 'info');
+
+    // 2. Perform delete in background
+    apiService.deleteSiswa(id)
+      .then(res => {
+         if (res.success) {
+           showToast('Siswa berhasil dihapus secara online di Google Sheets.', 'success');
+         } else {
+           showToast('Gagal menghapus dari Google Sheets. Terhapus secara lokal.', 'error');
+         }
+      })
+      .catch(() => {
+         showToast('Koneksi terputus. Terhapus secara lokal.', 'error');
+      });
+
+    return true;
   };
 
   // GAS url updater
@@ -615,15 +695,30 @@ export default function App() {
             onSaveSiswa={handleSaveSiswa}
             onDeleteSiswa={handleDeleteSiswa}
             onSavePrestasi={async (p, isNew) => {
-              const res = await apiService.savePrestasi(p, isNew);
-              alert(res.message);
-              await loadDatabase(false, true);
+              setDb(prev => {
+                if (!prev) return prev;
+                const list = isNew 
+                  ? [...prev.prestasi, p] 
+                  : prev.prestasi.map(item => item.id === p.id ? { ...item, ...p } : item);
+                return { ...prev, prestasi: list };
+              });
+              apiService.savePrestasi(p, isNew).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menyimpan data Prestasi.', 'error');
+              });
               return true;
             }}
             onDeletePrestasi={async (id) => {
-              const res = await apiService.deletePrestasi(id);
-              alert(res.message);
-              await loadDatabase(false, true);
+              setDb(prev => {
+                if (!prev) return prev;
+                return { ...prev, prestasi: prev.prestasi.filter(item => item.id !== id) };
+              });
+              apiService.deletePrestasi(id).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menghapus data Prestasi.', 'error');
+              });
               return true;
             }}
             onRefresh={async () => {
@@ -636,11 +731,14 @@ export default function App() {
                 if (!prev) return prev;
                 const list = isNew 
                   ? [...prev.surat, s] 
-                  : prev.surat.map(item => item.id === s.id ? s : item);
+                  : prev.surat.map(item => item.id === s.id ? { ...item, ...s } : item);
                 return { ...prev, surat: list };
               });
-              const res = await apiService.saveSurat(s, isNew);
-              showToast(res.message, 'success');
+              apiService.saveSurat(s, isNew).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menyimpan dokumen surat.', 'error');
+              });
               return true;
             }}
             onDeleteSurat={async (id) => {
@@ -648,8 +746,11 @@ export default function App() {
                 if (!prev) return prev;
                 return { ...prev, surat: prev.surat.filter(item => item.id !== id) };
               });
-              const res = await apiService.deleteSurat(id);
-              showToast(res.message, 'success');
+              apiService.deleteSurat(id).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menghapus dokumen surat.', 'error');
+              });
               return true;
             }}
           />
@@ -669,7 +770,7 @@ export default function App() {
                 return { ...prev, konseling: list };
               });
               apiService.saveKonseling(k, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Konseling.', 'error');
               });
@@ -681,7 +782,7 @@ export default function App() {
                 return { ...prev, konseling: prev.konseling.filter(item => item.id !== id) };
               });
               apiService.deleteKonseling(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Konseling.', 'error');
               });
@@ -696,7 +797,7 @@ export default function App() {
                 return { ...prev, pelanggaran: list };
               });
               apiService.savePelanggaran(p, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Pelanggaran.', 'error');
               });
@@ -708,7 +809,7 @@ export default function App() {
                 return { ...prev, pelanggaran: prev.pelanggaran.filter(item => item.id !== id) };
               });
               apiService.deletePelanggaran(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Pelanggaran.', 'error');
               });
@@ -723,7 +824,7 @@ export default function App() {
                 return { ...prev, remisiPoin: list };
               });
               apiService.saveRemisiPoin(r, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Remisi Poin.', 'error');
               });
@@ -735,7 +836,7 @@ export default function App() {
                 return { ...prev, remisiPoin: prev.remisiPoin.filter(item => item.id !== id) };
               });
               apiService.deleteRemisiPoin(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Remisi Poin.', 'error');
               });
@@ -750,7 +851,7 @@ export default function App() {
                 return { ...prev, prestasi: list };
               });
               apiService.savePrestasi(p, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Prestasi.', 'error');
               });
@@ -762,7 +863,7 @@ export default function App() {
                 return { ...prev, prestasi: prev.prestasi.filter(item => item.id !== id) };
               });
               apiService.deletePrestasi(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Prestasi.', 'error');
               });
@@ -777,7 +878,7 @@ export default function App() {
                 return { ...prev, asesmen: list };
               });
               apiService.saveAsesmen(a, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Asesmen.', 'error');
               });
@@ -789,7 +890,7 @@ export default function App() {
                 return { ...prev, asesmen: prev.asesmen.filter(item => item.id !== id) };
               });
               apiService.deleteAsesmen(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Asesmen.', 'error');
               });
@@ -804,7 +905,7 @@ export default function App() {
                 return { ...prev, homeVisit: list };
               });
               apiService.saveHomeVisit(h, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Kunjungan Rumah.', 'error');
               });
@@ -816,7 +917,7 @@ export default function App() {
                 return { ...prev, homeVisit: prev.homeVisit.filter(item => item.id !== id) };
               });
               apiService.deleteHomeVisit(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Kunjungan Rumah.', 'error');
               });
@@ -831,7 +932,7 @@ export default function App() {
                 return { ...prev, kehadiran: list };
               });
               apiService.saveKehadiran(k, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan data Kehadiran.', 'error');
               });
@@ -843,7 +944,7 @@ export default function App() {
                 return { ...prev, kehadiran: (prev.kehadiran || []).filter(item => item.id !== id) };
               });
               apiService.deleteKehadiran(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus data Kehadiran.', 'error');
               });
@@ -866,7 +967,7 @@ export default function App() {
                 return { ...prev, surat: list };
               });
               apiService.saveSurat(s, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menyimpan dokumen surat.', 'error');
               });
@@ -878,7 +979,7 @@ export default function App() {
                 return { ...prev, surat: prev.surat.filter(item => item.id !== id) };
               });
               apiService.deleteSurat(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus dokumen surat.', 'error');
               });
@@ -893,7 +994,7 @@ export default function App() {
                 return { ...prev, dokumen: list };
               });
               apiService.saveDokumen(d, isNew).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal mendaftarkan dokumen.', 'error');
               });
@@ -905,7 +1006,7 @@ export default function App() {
                 return { ...prev, dokumen: prev.dokumen.filter(item => item.id !== id) };
               });
               apiService.deleteDokumen(id).then(res => {
-                showToast(res.message, 'success');
+                showToast(res.message, res.success ? 'success' : 'error');
               }).catch(() => {
                 showToast('Gagal menghapus dokumen.', 'error');
               });
@@ -920,53 +1021,92 @@ export default function App() {
             db={db}
             currentUser={currentUser}
             onSaveTP={async (tp, isNew) => {
-              const res = await apiService.saveTahunPelajaran(tp, isNew);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                let list = [...prev.tahunPelajaran];
+                if (tp.isActive) {
+                  list = list.map(item => ({ ...item, isActive: false }));
+                }
+                if (isNew) {
+                  list.push(tp);
+                } else {
+                  list = list.map(item => item.id === tp.id ? { ...item, ...tp } : item);
+                }
+                return { ...prev, tahunPelajaran: list };
+              });
+              apiService.saveTahunPelajaran(tp, isNew).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menyimpan data Tahun Pelajaran.', 'error');
+              });
+              return true;
             }}
             onDeleteTP={async (id) => {
-              const res = await apiService.deleteTahunPelajaran(id);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                return { ...prev, tahunPelajaran: prev.tahunPelajaran.filter(item => item.id !== id) };
+              });
+              apiService.deleteTahunPelajaran(id).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menghapus data Tahun Pelajaran.', 'error');
+              });
+              return true;
             }}
             onSaveKelas={async (kl, isNew) => {
-              const res = await apiService.saveKelas(kl, isNew);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                const list = isNew 
+                  ? [...prev.kelas, kl] 
+                  : prev.kelas.map(item => item.id === kl.id ? { ...item, ...kl } : item);
+                return { ...prev, kelas: list };
+              });
+              apiService.saveKelas(kl, isNew).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menyimpan data Kelas.', 'error');
+              });
+              return true;
             }}
             onDeleteKelas={async (id) => {
-              const res = await apiService.deleteKelas(id);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                return { ...prev, kelas: prev.kelas.filter(item => item.id !== id) };
+              });
+              apiService.deleteKelas(id).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menghapus data Kelas.', 'error');
+              });
+              return true;
             }}
 
             onSaveUser={async (u, isNew) => {
-              const res = await apiService.saveUser(u, isNew);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                const list = isNew 
+                  ? [...prev.users, u] 
+                  : prev.users.map(item => item.id === u.id ? { ...item, ...u } : item);
+                return { ...prev, users: list };
+              });
+              apiService.saveUser(u, isNew).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menyimpan data Pengguna.', 'error');
+              });
+              return true;
             }}
             onDeleteUser={async (id) => {
-              const res = await apiService.deleteUser(id);
-              alert(res.message);
-              if (res.success) {
-                await loadDatabase(false, true);
-              }
-              return res.success;
+              setDb(prev => {
+                if (!prev) return prev;
+                return { ...prev, users: prev.users.filter(item => item.id !== id) };
+              });
+              apiService.deleteUser(id).then(res => {
+                showToast(res.message, res.success ? 'success' : 'error');
+              }).catch(() => {
+                showToast('Gagal menghapus data Pengguna.', 'error');
+              });
+              return true;
             }}
           />
         )}
@@ -1263,9 +1403,17 @@ export default function App() {
 
       {/* Modern Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-800 animate-bounce duration-300">
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-rose-500' : 'bg-cyan-500'}`} />
-          <span className="text-xs font-semibold text-slate-100">{toast.message}</span>
+        <div className="fixed bottom-6 right-6 z-50 flex items-start gap-3 max-w-md px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-800 animate-bounce duration-300">
+          <div className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-rose-500' : 'bg-cyan-500'}`} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-100 whitespace-pre-wrap leading-relaxed">{toast.message}</p>
+          </div>
+          <button 
+            onClick={() => setToast(null)}
+            className="text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1 ml-1"
+          >
+            ×
+          </button>
         </div>
       )}
     </div>

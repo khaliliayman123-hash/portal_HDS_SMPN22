@@ -1001,17 +1001,28 @@ export const apiService = {
     const db = loadLocalDatabase();
     
     if (isNew) {
-      // Check for duplicate NIS
-      if (db.siswa.some(s => s.nis === siswaData.nis)) {
+      // Check for duplicate NIS (only for other students)
+      if (siswaData.nis && db.siswa.some(s => s.nis === siswaData.nis && s.id !== siswaData.id)) {
         return { success: false, message: `Siswa dengan NIS ${siswaData.nis} sudah terdaftar.` };
       }
-      db.siswa.push(siswaData);
-      db.orangTua.push(orangTuaData);
-      db.kesehatan.push(kesehatanData);
-      db.ekonomi.push(ekonomiData);
-      db.psikologi.push(psikologiData);
-      db.sosial.push(sosialData);
-      db.akademik.push(akademikData);
+      if (!db.siswa.some(s => s.id === siswaData.id)) {
+        db.siswa.push(siswaData);
+        db.orangTua.push(orangTuaData);
+        db.kesehatan.push(kesehatanData);
+        db.ekonomi.push(ekonomiData);
+        db.psikologi.push(psikologiData);
+        db.sosial.push(sosialData);
+        db.akademik.push(akademikData);
+      } else {
+        // Fallback: update existing record to avoid duplicate elements in the arrays
+        db.siswa = db.siswa.map(s => s.id === siswaData.id ? siswaData : s);
+        db.orangTua = db.orangTua.map(o => o.id === orangTuaData.id ? orangTuaData : o);
+        db.kesehatan = db.kesehatan.map(k => k.id === kesehatanData.id ? kesehatanData : k);
+        db.ekonomi = db.ekonomi.map(e => e.id === ekonomiData.id ? ekonomiData : e);
+        db.psikologi = db.psikologi.map(p => p.id === psikologiData.id ? psikologiData : p);
+        db.sosial = db.sosial.map(s => s.id === sosialData.id ? sosialData : s);
+        db.akademik = db.akademik.map(a => a.id === akademikData.id ? akademikData : a);
+      }
     } else {
       db.siswa = db.siswa.map(s => s.id === siswaData.id ? siswaData : s);
       db.orangTua = db.orangTua.map(o => o.id === orangTuaData.id ? orangTuaData : o);

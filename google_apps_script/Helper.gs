@@ -178,18 +178,11 @@ function saveRowEntity(db, sheetName, entity, isNew) {
   
   const headers = sheet.getDataRange().getValues()[0];
   
-  if (isNew) {
-    // Append Row
-    const newRow = [];
-    headers.forEach(function(header) {
-      newRow.push(entity[header] !== undefined ? entity[header] : "");
-    });
-    sheet.appendRow(newRow);
-  } else {
-    // Edit Row
+  let rowIndex = -1;
+  if (!isNew) {
+    // Edit Row - first search for existing row
     const dataRange = sheet.getDataRange();
     const values = dataRange.getValues();
-    let rowIndex = -1;
     
     for (let i = 1; i < values.length; i++) {
       if (values[i][0] == entity.id) {
@@ -197,16 +190,30 @@ function saveRowEntity(db, sheetName, entity, isNew) {
         break;
       }
     }
-    
-    if (rowIndex > -1) {
-      headers.forEach(function(header, colIdx) {
-        if (entity[header] !== undefined) {
-          sheet.getRange(rowIndex, colIdx + 1).setValue(entity[header]);
+  }
+  
+  if (isNew || rowIndex === -1) {
+    // Append Row (either explicitly new, or fallback because ID wasn't found in this sheet yet)
+    const newRow = [];
+    headers.forEach(function(header) {
+      let val = entity[header] !== undefined ? entity[header] : "";
+      if (typeof val === 'string' && val.length > 45000) {
+        val = val.substring(0, 45000) + "... (truncated)";
+      }
+      newRow.push(val);
+    });
+    sheet.appendRow(newRow);
+  } else {
+    // Edit Row
+    headers.forEach(function(header, colIdx) {
+      if (entity[header] !== undefined) {
+        let val = entity[header];
+        if (typeof val === 'string' && val.length > 45000) {
+          val = val.substring(0, 45000) + "... (truncated)";
         }
-      });
-    } else {
-      throw new Error("Entity dengan ID " + entity.id + " tidak ditemukan di " + sheetName);
-    }
+        sheet.getRange(rowIndex, colIdx + 1).setValue(val);
+      }
+    });
   }
 }
 

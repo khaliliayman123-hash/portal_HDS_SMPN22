@@ -513,19 +513,44 @@ export default function SiswaView({
     }
   };
 
-  // Handle local state changes
+  // Handle local state changes with automatic client-side compression to satisfy Google Sheets cell limit of 50,000 characters
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('File foto maksimal berukuran 2MB!');
-        return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setPhotoPreview(base64);
-        setFormSiswa(prev => ({ ...prev, foto: base64 }));
+        const img = new Image();
+        img.onload = () => {
+          // Limit to max 180px while maintaining aspect ratio
+          const maxDim = 180;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round(height * (maxDim / width));
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round(width * (maxDim / height));
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Save as JPEG with quality 0.7 which yields an extremely small string (usually 4KB - 8KB)
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            setPhotoPreview(compressedBase64);
+            setFormSiswa(prev => ({ ...prev, foto: compressedBase64 }));
+          }
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -533,7 +558,7 @@ export default function SiswaView({
 
   // Open Editor for ADD or EDIT
   const openSiswaEditor = (siswa: Siswa | null) => {
-    if (!canModify) return;
+    if (!canModify && !(isStudent && siswa && siswa.id === currentUser.id)) return;
 
     if (siswa) {
       // Load current student data pack
@@ -675,7 +700,9 @@ export default function SiswaView({
     const success = await onSaveSiswa(sPack, oPack, kPack, ePack, pPack, s2Pack, aPack, isNew);
     if (success) {
       setIsEditorOpen(false);
-      setViewingSiswa(null);
+      // Keep the updated student data active on the screen
+      const updatedSiswa = db.siswa.find(s => s.id === sPack.id) || sPack;
+      setViewingSiswa(updatedSiswa);
     }
   };
 
@@ -998,14 +1025,16 @@ export default function SiswaView({
           <p className="text-xs text-slate-500">Kelola informasi komprehensif, biodata, rekam psikologis, medis, dan akademis siswa.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={handleDownloadExcelTemplate}
-            className="flex-1 sm:flex-initial bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-            title="Unduh template Excel resmi (format CSV)"
-          >
-            <Download size={16} /> Unduh Template Excel
-          </button>
+          {!isStudent && (
+            <button
+              type="button"
+              onClick={handleDownloadExcelTemplate}
+              className="flex-1 sm:flex-initial bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              title="Unduh template Excel resmi (format CSV)"
+            >
+              <Download size={16} /> Unduh Template Excel
+            </button>
+          )}
           {canModify && (
             <label className="flex-1 sm:flex-initial bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer select-none">
               <Upload size={16} />
@@ -1019,13 +1048,15 @@ export default function SiswaView({
               />
             </label>
           )}
-          <button
-            type="button"
-            onClick={() => setIsSpreadsheetViewOpen(true)}
-            className="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-          >
-            <FileSpreadsheet size={16} className="text-emerald-600" /> Integrasi Excel (Grid)
-          </button>
+          {!isStudent && (
+            <button
+              type="button"
+              onClick={() => setIsSpreadsheetViewOpen(true)}
+              className="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+            >
+              <FileSpreadsheet size={16} className="text-emerald-600" /> Integrasi Excel (Grid)
+            </button>
+          )}
           {onRefresh && (
             <button
               type="button"
@@ -1227,7 +1258,18 @@ export default function SiswaView({
           {viewingSiswa ? (
             <div className="flex flex-col h-full">
               {/* Cover profile header */}
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white flex flex-col items-center text-center relative">
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white flex flex-col items-center text-center relative animate-fade-in">
+                {(isStudent || canModify) && (
+                  <button 
+                    onClick={() => openSiswaEditor(viewingSiswa)}
+                    title="Ubah Data HDS"
+                    className="absolute left-3 top-3 px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/35 text-white text-[10px] font-bold rounded-xl border border-white/20 transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Edit2 size={12} />
+                    <span>Ubah Data HDS</span>
+                  </button>
+                )}
+                
                 {!isStudent && (
                   <button 
                     onClick={() => setViewingSiswa(null)}
