@@ -358,6 +358,9 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
+  if (parsed && parsed._sanitized) {
+    return { sanitized: parsed as DatabaseState, migrated: false };
+  }
   let migrated = false;
 
   if (!parsed || typeof parsed !== 'object') {
@@ -639,6 +642,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
+  parsed._sanitized = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 

@@ -283,6 +283,7 @@ export interface DatabaseState {
   jurusan: Jurusan[];
   logAktivitas: LogAktivitas[];
   kehadiran?: Kehadiran[];
+  _sanitized?: boolean;
   config: {
     gasApiUrl: string;
     spreadsheetId?: string;

@@ -35,7 +35,14 @@ import MasterLaporanView from './components/MasterLaporanView';
 
 export default function App() {
   // Session States
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('hds_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [selectedUsername, setSelectedUsername] = useState('gurubk');
@@ -58,11 +65,33 @@ export default function App() {
   };
 
   // Navigations routing states
-  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'siswa' | 'layanan' | 'dokumen' | 'master' | 'pengaturan'>('dashboard');
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'siswa' | 'layanan' | 'dokumen' | 'master' | 'pengaturan'>(() => {
+    try {
+      const saved = localStorage.getItem('hds_current_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.role === UserRole.SISWA) {
+          return 'siswa';
+        }
+      }
+    } catch {}
+    return 'dashboard';
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // High-fidelity deep link states to traverse panels
-  const [deepLinkSiswaId, setDeepLinkSiswaId] = useState<string | undefined>(undefined);
+  const [deepLinkSiswaId, setDeepLinkSiswaId] = useState<string | undefined>(() => {
+    try {
+      const saved = localStorage.getItem('hds_current_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.role === UserRole.SISWA) {
+          return u.id;
+        }
+      }
+    } catch {}
+    return undefined;
+  });
   const [deepLinkSubTab, setDeepLinkSubTab] = useState<string | undefined>(undefined);
 
   // Settings URL inputs
@@ -127,6 +156,11 @@ export default function App() {
       const res = await apiService.login(username, pass);
       if (res.success && res.user) {
         setCurrentUser(res.user);
+        try {
+          localStorage.setItem('hds_current_user', JSON.stringify(res.user));
+        } catch (err) {
+          console.error('Failed to persist user session', err);
+        }
         setPassword(''); // Clear password field
         if (res.user.role === UserRole.SISWA) {
           setActiveMenu('siswa');
@@ -150,6 +184,11 @@ export default function App() {
       apiService.addLog(currentUser.id, currentUser.nama, currentUser.role, 'Logout', 'Sesi diakhiri secara tertib.');
     }
     setCurrentUser(null);
+    try {
+      localStorage.removeItem('hds_current_user');
+    } catch (err) {
+      console.error('Failed to clear user session', err);
+    }
   };
 
   // Deep Link Routing helper to go from Dashboard to Student Detail directly
