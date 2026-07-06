@@ -85,7 +85,7 @@ function setupHDSDatabaseSheets() {
   const initialData = {
     "Users": [
       ["admin", "admin", "Administrator Utama", "Admin", "admin@sekolah.sch.id", true],
-      ["gurubk", "gurubk", "Dra. Siti Rahmawati, M.Pd.", "Koordinator BK", "siti.rahma@sekolah.sch.id", true]
+      ["gurubk", "gurubk", "Nur Jamilah Purwaningsih, S.Psi", "Koordinator BK", "nurjamilah.bk@sekolah.sch.id", true]
     ],
     "TahunPelajaran": [
       ["tp-2023-ganjil", "2023/2024", "Ganjil", true]

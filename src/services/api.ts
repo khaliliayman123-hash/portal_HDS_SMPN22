@@ -450,6 +450,17 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
         u.isActive = true;
         migrated = true;
       }
+    } else {
+      // Dynamic fallback check for user objects representing the BK teacher from sheets/offline
+      const normalizedName = (u.nama || '').toString().toLowerCase();
+      const normalizedUser = (u.username || '').toString().toLowerCase();
+      if (normalizedUser === 'gurubk' || normalizedName.includes('sulaiman') || normalizedName.includes('siti rahma')) {
+        u.nama = 'Nur Jamilah Purwaningsih, S.Psi';
+        u.role = UserRole.GURU_BK;
+        u.username = 'gurubk';
+        u.email = 'nurjamilah.bk@sekolah.sch.id';
+        migrated = true;
+      }
     }
     if (u.id === 'usr-3') {
       hasUsr3 = true;
@@ -499,7 +510,18 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   // Update log activities with old BK/Admin names and Kepala Sekolah
   parsed.logAktivitas = parsed.logAktivitas.map((l: any) => {
     if (!l) return l;
-    if (l.namaUser === 'Siti Rahma, S.Pd., M.Psi.' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi.,MM' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi.,MM' || l.namaUser === 'Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi,.MM' || l.namaUser === 'Nur Jamilah Purwaningsih, S.Psi') {
+    const normUser = (l.namaUser || '').toString().toLowerCase();
+    if (
+      l.namaUser === 'Siti Rahma, S.Pd., M.Psi.' || 
+      l.namaUser === 'Koordinator BK Sulaiman, S.Psi.,MM' || 
+      l.namaUser === 'Koordinator BK Sulaiman, S.Psi., MM' || 
+      l.namaUser === 'Sulaiman, S.Psi.,MM' || 
+      l.namaUser === 'Sulaiman, S.Psi., MM' || 
+      l.namaUser === 'Sulaiman, S.Psi,.MM' || 
+      l.namaUser === 'Nur Jamilah Purwaningsih, S.Psi' ||
+      normUser.includes('sulaiman') ||
+      normUser.includes('siti rahma')
+    ) {
       l.namaUser = 'Nur Jamilah Purwaningsih, S.Psi';
       l.role = 'Koordinator BK';
       migrated = true;
@@ -521,6 +543,17 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       migrated = true;
     }
     return l;
+  });
+
+  // Update remisiPoin where the teacher giving it is old BK name
+  parsed.remisiPoin = parsed.remisiPoin.map((r: any) => {
+    if (!r) return r;
+    const normG = (r.guruPemberi || '').toString().toLowerCase();
+    if (normG.includes('sulaiman') || normG.includes('siti rahma')) {
+      r.guruPemberi = 'Nur Jamilah Purwaningsih, S.Psi';
+      migrated = true;
+    }
+    return r;
   });
 
   // Update class Wali Kelas distribution
