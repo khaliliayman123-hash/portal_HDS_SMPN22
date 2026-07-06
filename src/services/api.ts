@@ -34,7 +34,8 @@ const LOCAL_STORAGE_KEY = 'hds_bk_database_v1';
 // Seed data to make the dashboard charts and widgets look spectacular and complete right away
 const INITIAL_DATABASE: DatabaseState = {
   config: {
-    gasApiUrl: 'https://script.google.com/macros/s/AKfycbz8ooxfXeA6q9ozWdRFLgSEFnfpMkm1vYKRdZDPglP9_tNpE7dQbVSTiYmlP3AOCh-j/exec',
+    gasApiUrl: 'https://script.google.com/macros/s/AKfycbwL5nTSIsbpgFE6JxD2STMWQiFezjN8Dw6xTg_ktbtVUOHTvLinLFuu6ojYe0QP9bZm/exec',
+    spreadsheetId: '1g3thopFbDdsvlXyidgq_PEiiEhY5cH3PngqGO5weHqc',
   },
   users: [
     { id: 'usr-1', username: 'admin', nama: 'Holfi Aulia, S.Pd', role: UserRole.ADMIN, email: 'holfi.aulia@sekolah.sch.id', isActive: true },
@@ -366,16 +367,16 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   // Ensure config block is present
   if (!parsed.config || typeof parsed.config !== 'object') {
     parsed.config = { 
-      gasApiUrl: 'https://script.google.com/macros/s/AKfycbz8ooxfXeA6q9ozWdRFLgSEFnfpMkm1vYKRdZDPglP9_tNpE7dQbVSTiYmlP3AOCh-j/exec', 
-      spreadsheetId: ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '' 
+      gasApiUrl: 'https://script.google.com/macros/s/AKfycbwL5nTSIsbpgFE6JxD2STMWQiFezjN8Dw6xTg_ktbtVUOHTvLinLFuu6ojYe0QP9bZm/exec', 
+      spreadsheetId: ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '1g3thopFbDdsvlXyidgq_PEiiEhY5cH3PngqGO5weHqc' 
     };
     migrated = true;
   } else {
     const originalGas = parsed.config.gasApiUrl;
     const originalSpreadsheet = parsed.config.spreadsheetId;
     parsed.config = {
-      gasApiUrl: (parsed.config.gasApiUrl && parsed.config.gasApiUrl.trim() !== '' ? parsed.config.gasApiUrl : 'https://script.google.com/macros/s/AKfycbz8ooxfXeA6q9ozWdRFLgSEFnfpMkm1vYKRdZDPglP9_tNpE7dQbVSTiYmlP3AOCh-j/exec').toString().trim(),
-      spreadsheetId: (parsed.config.spreadsheetId || ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '').toString().trim()
+      gasApiUrl: (parsed.config.gasApiUrl && parsed.config.gasApiUrl.trim() !== '' ? parsed.config.gasApiUrl : 'https://script.google.com/macros/s/AKfycbwL5nTSIsbpgFE6JxD2STMWQiFezjN8Dw6xTg_ktbtVUOHTvLinLFuu6ojYe0QP9bZm/exec').toString().trim(),
+      spreadsheetId: (parsed.config.spreadsheetId || ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '1g3thopFbDdsvlXyidgq_PEiiEhY5cH3PngqGO5weHqc').toString().trim()
     };
     if (parsed.config.gasApiUrl !== originalGas || parsed.config.spreadsheetId !== originalSpreadsheet) {
       migrated = true;
@@ -675,7 +676,7 @@ function saveLocalDatabase(db: DatabaseState) {
 }
 
 export const getGasApiUrl = (): string => {
-  return currentDatabase.config.gasApiUrl || ((import.meta as any).env?.VITE_GAS_API_URL as string) || 'https://script.google.com/macros/s/AKfycbz8ooxfXeA6q9ozWdRFLgSEFnfpMkm1vYKRdZDPglP9_tNpE7dQbVSTiYmlP3AOCh-j/exec';
+  return currentDatabase.config.gasApiUrl || ((import.meta as any).env?.VITE_GAS_API_URL as string) || 'https://script.google.com/macros/s/AKfycbwL5nTSIsbpgFE6JxD2STMWQiFezjN8Dw6xTg_ktbtVUOHTvLinLFuu6ojYe0QP9bZm/exec';
 };
 
 export const setGasApiUrl = (url: string) => {
@@ -685,7 +686,7 @@ export const setGasApiUrl = (url: string) => {
 };
 
 export const getSpreadsheetId = (): string => {
-  return currentDatabase.config.spreadsheetId || ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '';
+  return currentDatabase.config.spreadsheetId || ((import.meta as any).env?.VITE_SPREADSHEET_ID as string) || '1g3thopFbDdsvlXyidgq_PEiiEhY5cH3PngqGO5weHqc';
 };
 
 export const setSpreadsheetId = (id: string) => {
