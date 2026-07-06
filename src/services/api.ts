@@ -38,7 +38,7 @@ const INITIAL_DATABASE: DatabaseState = {
   },
   users: [
     { id: 'usr-1', username: 'admin', nama: 'Holfi Aulia, S.Pd', role: UserRole.ADMIN, email: 'holfi.aulia@sekolah.sch.id', isActive: true },
-    { id: 'usr-2', username: 'gurubk', nama: 'Sulaiman, S.Psi,.MM', role: UserRole.GURU_BK, email: 'sulaiman.bk@sekolah.sch.id', isActive: true },
+    { id: 'usr-2', username: 'gurubk', nama: 'Nur Jamilah Purwaningsih, S.Psi', role: UserRole.GURU_BK, email: 'nurjamilah.bk@sekolah.sch.id', isActive: true },
     { id: 'usr-3', username: 'artapolta', nama: 'Arta Polta, S.Pd', role: UserRole.WALI_KELAS, email: 'artapolta@sekolah.sch.id', isActive: true },
     { id: 'usr-4', username: 'kepsek', nama: 'Salim, S.Pd., M.Hum.', role: UserRole.KEPALA_SEKOLAH, email: 'salim.kepsek@sekolah.sch.id', isActive: true },
     { id: 'usr-5', username: 'nandaputri', nama: 'Nanda Putri Utami, S.Pd', role: UserRole.WALI_KELAS, email: 'nandaputri@sekolah.sch.id', isActive: true },
@@ -321,7 +321,7 @@ const INITIAL_DATABASE: DatabaseState = {
     { id: 'pel-4', siswaId: 'sis-1', tanggal: '2026-06-10', jenisPelanggaran: 'Terlambat masuk sekolah', kategori: 'Ringan', poin: 5, guruPelapor: 'Piket Guru', tindakLanjut: 'Teguran lisan', status: 'Selesai' },
   ],
   remisiPoin: [
-    { id: 'rem-1', siswaId: 'sis-3', tanggal: '2026-06-26', jenisRemisi: 'Membantu Kerapian Perpustakaan', kategori: 'Karakter Baik', poin: 15, guruPemberi: 'Sulaiman, S.Psi,.MM', keterangan: 'Siswa sangat rajin merapikan buku di perpustakaan sebagai bentuk perubahan perilaku positif.' }
+    { id: 'rem-1', siswaId: 'sis-3', tanggal: '2026-06-26', jenisRemisi: 'Membantu Kerapian Perpustakaan', kategori: 'Karakter Baik', poin: 15, guruPemberi: 'Nur Jamilah Purwaningsih, S.Psi', keterangan: 'Siswa sangat rajin merapikan buku di perpustakaan sebagai bentuk perubahan perilaku positif.' }
   ],
   konseling: [
     { id: 'kon-1', nomorKonseling: 'BK-2026-001', siswaId: 'sis-3', tanggal: '2026-06-18', jenis: 'Individu', guruBkId: 'usr-2', permasalahan: 'Merokok di area sekolah dan kedapatan membawa rokok.', analisis: 'Siswa mengalami tekanan pergaulan luar sekolah dan merasa stres karena masalah ekonomi keluarga.', solusi: 'Melakukan konseling relaksasi, menyepakati kontrak perilaku untuk berhenti merokok, dan menghubungkan ke program beasiswa sekolah.', hasil: 'Siswa kooperatif, berjanji mengurangi rokok, dan bersedia dipantau perkembangannya.', tindakLanjut: 'Pemantauan berkala bersama Wali Kelas.' },
@@ -345,7 +345,7 @@ const INITIAL_DATABASE: DatabaseState = {
   ],
   logAktivitas: [
     { id: 'log-1', timestamp: '2026-06-28T09:00:00Z', userId: 'usr-1', namaUser: 'Holfi Aulia, S.Pd', role: 'Admin', aktivitas: 'Login', detail: 'Berhasil masuk ke dalam sistem.' },
-    { id: 'log-2', timestamp: '2026-06-28T09:15:00Z', userId: 'usr-2', namaUser: 'Sulaiman, S.Psi., MM', role: 'Koordinator BK', aktivitas: 'Tambah Konseling', detail: 'Membuat rekaman konseling individu untuk Candra Wijaya.' },
+    { id: 'log-2', timestamp: '2026-06-28T09:15:00Z', userId: 'usr-2', namaUser: 'Nur Jamilah Purwaningsih, S.Psi', role: 'Koordinator BK', aktivitas: 'Tambah Konseling', detail: 'Membuat rekaman konseling individu untuk Candra Wijaya.' },
   ],
   kehadiran: [
     { id: 'att-1', siswaId: 'sis-1', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 5, sakit: 0, izin: 0, alfa: 0, keterangan: 'Hadir penuh' },
@@ -416,9 +416,9 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     parsed.users.push({ 
       id: 'usr-2', 
       username: 'gurubk', 
-      nama: 'Sulaiman, S.Psi,.MM', 
+      nama: 'Nur Jamilah Purwaningsih, S.Psi', 
       role: UserRole.GURU_BK, 
-      email: 'sulaiman.bk@sekolah.sch.id', 
+      email: 'nurjamilah.bk@sekolah.sch.id', 
       isActive: true 
     });
     migrated = true;
@@ -442,11 +442,11 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       }
     }
     if (u.id === 'usr-2') {
-      if (u.nama !== 'Sulaiman, S.Psi,.MM' || u.username !== 'gurubk' || u.role !== UserRole.GURU_BK || u.isActive !== true) {
-        u.nama = 'Sulaiman, S.Psi,.MM';
+      if (u.nama !== 'Nur Jamilah Purwaningsih, S.Psi' || u.username !== 'gurubk' || u.role !== UserRole.GURU_BK || u.isActive !== true) {
+        u.nama = 'Nur Jamilah Purwaningsih, S.Psi';
         u.username = 'gurubk';
         u.role = UserRole.GURU_BK;
-        u.email = 'sulaiman.bk@sekolah.sch.id';
+        u.email = 'nurjamilah.bk@sekolah.sch.id';
         u.isActive = true;
         migrated = true;
       }
@@ -499,8 +499,8 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   // Update log activities with old BK/Admin names and Kepala Sekolah
   parsed.logAktivitas = parsed.logAktivitas.map((l: any) => {
     if (!l) return l;
-    if (l.namaUser === 'Siti Rahma, S.Pd., M.Psi.' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi.,MM' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi.,MM' || l.namaUser === 'Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi,.MM') {
-      l.namaUser = 'Sulaiman, S.Psi,.MM';
+    if (l.namaUser === 'Siti Rahma, S.Pd., M.Psi.' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi.,MM' || l.namaUser === 'Koordinator BK Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi.,MM' || l.namaUser === 'Sulaiman, S.Psi., MM' || l.namaUser === 'Sulaiman, S.Psi,.MM' || l.namaUser === 'Nur Jamilah Purwaningsih, S.Psi') {
+      l.namaUser = 'Nur Jamilah Purwaningsih, S.Psi';
       l.role = 'Koordinator BK';
       migrated = true;
     }

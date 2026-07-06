@@ -141,43 +141,366 @@ export default function DokumenSuratView({
     }
   };
 
-  const triggerPrint = () => {
-    const element = document.getElementById('printable-letter-container');
-    if (!element) {
-      alert('Elemen surat tidak ditemukan.');
-      return;
+  const triggerDownloadWord = () => {
+    if (!previewLetter) return;
+    const siswa = db.siswa.find(item => item.id === previewLetter.siswaId);
+    const kelasObj = db.kelas.find(k => 
+      k.id === siswa?.kelasId || 
+      k.namaKelas.toLowerCase().trim() === siswa?.kelasId?.toLowerCase().trim()
+    );
+    const kelasNama = kelasObj?.namaKelas || siswa?.kelasId || '-';
+    
+    let contentHtml = '';
+
+    if (previewLetter.jenisSurat === 'Surat Kontrak Perilaku') {
+      contentHtml = `
+        <div style="text-align: center; font-weight: bold; font-size: 13pt; text-transform: uppercase; margin-bottom: 5px;">
+          <u>SURAT PERNYATAAN / KONTRAK PERILAKU TERTIB SISWA</u>
+        </div>
+        <div style="text-align: center; font-size: 11pt; margin-bottom: 20px;">
+          Nomor: ${previewLetter.nomorSurat}
+        </div>
+
+        <p class="content-p">
+          Yang bertanda tangan di bawah ini menerangkan komitmen bersama demi ketertiban sekolah dan pembinaan perkembangan karakter peserta didik UPTD SMP Negeri 22 Kota Tangerang Selatan:
+        </p>
+
+        <table class="student-table" style="border: none;">
+          <tr>
+            <td style="width: 140px; font-weight: bold; border: none; text-align: left;">Nama Siswa</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nama || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">NIS / NISN</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nis || '-'} / ${siswa?.nisn || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Kelas</td>
+            <td style="border: none; text-align: left;">: ${kelasNama}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Alamat Rumah</td>
+            <td style="border: none; text-align: left;">: ${siswa?.alamat || '-'}</td>
+          </tr>
+        </table>
+
+        <p class="content-p">
+          Dengan ini menyatakan secara sadar, jujur, dan sungguh-sungguh bahwa: ${previewLetter.isiSurat}
+        </p>
+
+        <p class="content-p">
+          Demikian surat pernyataan kontrak perilaku tertib siswa ini dibuat dengan kesadaran penuh tanpa paksaan dari pihak manapun, demi masa depan kepribadian dan disiplin saya di lingkungan sekolah.
+        </p>
+      `;
+    } else if (previewLetter.jenisSurat === 'Surat Home Visit') {
+      contentHtml = `
+        <div style="text-align: center; font-weight: bold; font-size: 13pt; text-transform: uppercase; margin-bottom: 5px;">
+          <u>SURAT TUGAS KUNJUNGAN RUMAH (HOME VISIT)</u>
+        </div>
+        <div style="text-align: center; font-size: 11pt; margin-bottom: 20px;">
+          Nomor: ${previewLetter.nomorSurat}
+        </div>
+
+        <p class="content-p">
+          Berdasarkan perkembangan program bimbingan konseling dan tata tertib siswa, Kepala Sekolah UPTD SMP Negeri 22 Kota Tangerang Selatan memberikan tugas kepada guru bimbingan konseling untuk mengadakan kunjungan rumah (home visit) ke kediaman orang tua/wali dari peserta didik berikut:
+        </p>
+
+        <table class="student-table" style="border: none;">
+          <tr>
+            <td style="width: 140px; font-weight: bold; border: none; text-align: left;">Nama Siswa</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nama || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">NIS / NISN</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nis || '-'} / ${siswa?.nisn || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Kelas</td>
+            <td style="border: none; text-align: left;">: ${kelasNama}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Alamat Kunjungan</td>
+            <td style="border: none; text-align: left;">: ${siswa?.alamat || '-'}</td>
+          </tr>
+        </table>
+
+        <p class="content-p">
+          Adapun deskripsi dan tujuan khusus pelaksanaan kunjungan rumah ini adalah: ${previewLetter.isiSurat}
+        </p>
+
+        <p class="content-p">
+          Demikian surat tugas kunjungan rumah ini diberikan untuk dilaksanakan dengan penuh tanggung jawab serta koordinasi yang baik bersama pihak orang tua/wali murid siswa yang bersangkutan.
+        </p>
+      `;
+    } else if (previewLetter.jenisSurat === 'Surat Rujukan') {
+      contentHtml = `
+        <table class="letter-info" style="width: 100%; border: none;">
+          <tr>
+            <td style="width: 60%; border: none; text-align: left;">
+              Nomor : ${previewLetter.nomorSurat}<br>
+              Lampiran: -<br>
+              Perihal : <u>Rujukan Layanan Khusus Ahli (Referral)</u>
+            </td>
+            <td style="width: 40%; text-align: right; border: none;">
+              Tangerang Selatan, ${previewLetter.tanggal}
+            </td>
+          </tr>
+        </table>
+
+        <div class="recipient">
+          Kepada Yth,<br>
+          <b>Pimpinan Lembaga Konsultasi Ahli / Psikolog Profesional</b><br>
+          Di Tempat
+        </div>
+
+        <p class="content-p" style="text-indent: 0px;">Dengan hormat,</p>
+
+        <p class="content-p">
+          Guna membantu mengoptimalkan tumbuh kembang serta membantu mengatasi hambatan psikologis atau akademis peserta didik kami secara mendalam, bersama surat ini kami merujuk siswa kami berikut:
+        </p>
+
+        <table class="student-table" style="border: none;">
+          <tr>
+            <td style="width: 140px; font-weight: bold; border: none; text-align: left;">Nama Siswa</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nama || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">NIS / NISN</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nis || '-'} / ${siswa?.nisn || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Kelas</td>
+            <td style="border: none; text-align: left;">: ${kelasNama}</td>
+          </tr>
+        </table>
+
+        <p class="content-p">
+          Berdasarkan hasil analisis kami: ${previewLetter.isiSurat}
+        </p>
+
+        <p class="content-p">
+          Demikian surat rujukan layanan khusus ini kami sampaikan. Atas bantuan profesional serta kerja sama yang baik dari pihak lembaga/psikolog, kami ucapkan banyak terima kasih.
+        </p>
+      `;
+    } else {
+      // Surat Panggilan (default)
+      contentHtml = `
+        <table class="letter-info" style="width: 100%; border: none;">
+          <tr>
+            <td style="width: 60%; border: none; text-align: left;">
+              Nomor : ${previewLetter.nomorSurat}<br>
+              Lampiran: -<br>
+              Perihal : <u>${previewLetter.perihal}</u>
+            </td>
+            <td style="width: 40%; text-align: right; border: none;">
+              Tangerang Selatan, ${previewLetter.tanggal}
+            </td>
+          </tr>
+        </table>
+
+        <div class="recipient">
+          Kepada Yth,<br>
+          <b>Bapak/Ibu Orang Tua / Wali Murid dari ${siswa?.nama || '-'}</b><br>
+          Di Tempat
+        </div>
+
+        <p class="content-p" style="text-indent: 0px;">Dengan hormat,</p>
+        
+        <p class="content-p">
+          Sehubungan dengan program bimbingan perkembangan karakter peserta didik UPTD SMP Negeri 22 Kota Tangerang Selatan, kami mengundang Bapak/Ibu sekalian untuk menghadiri koordinasi perkembangan anak:
+        </p>
+
+        <table class="student-table" style="border: none;">
+          <tr>
+            <td style="width: 140px; font-weight: bold; border: none; text-align: left;">Nama Siswa</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nama || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">NIS / NISN</td>
+            <td style="border: none; text-align: left;">: ${siswa?.nis || '-'} / ${siswa?.nisn || '-'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border: none; text-align: left;">Kelas</td>
+            <td style="border: none; text-align: left;">: ${kelasNama}</td>
+          </tr>
+        </table>
+
+        <p class="content-p">
+          Adapun agenda pertemuan dan pembinaan yang perlu dibahas bersama adalah: ${previewLetter.isiSurat}
+        </p>
+
+        <p class="content-p">
+          Demikian surat undangan koordinasi ini kami sampaikan. Atas perhatian, kehadiran, dan kerja sama yang baik dari Bapak/Ibu, kami mengucapkan banyak terima kasih.
+        </p>
+      `;
     }
 
-    // Obtain or create the persistent print container in the main DOM tree
-    let printSection = document.getElementById('print-section');
-    if (!printSection) {
-      printSection = document.createElement('div');
-      printSection.id = 'print-section';
-      document.body.appendChild(printSection);
-    }
+    const wordContent = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <title>${previewLetter.jenisSurat}</title>
+        <!--[if gte mso 9]>
+        <xml>
+          <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+          </w:WordDocument>
+        </xml>
+        <![endif]-->
+        <style>
+          @page {
+            size: 21cm 29.7cm;
+            margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+          }
+          @page Section1 {
+            size: 21cm 29.7cm;
+            margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+            mso-header-margin: 35.4pt;
+            mso-footer-margin: 35.4pt;
+            mso-paper-source: 0;
+          }
+          div.Section1 {
+            page: Section1;
+          }
+          body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.25;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+          }
+          .kop-surat {
+            text-align: center;
+            border-bottom: 3px double #000000;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+          }
+          .kop-prov {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            text-align: center;
+            line-height: 1.2;
+          }
+          .kop-title {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 2px 0 0 0;
+            text-align: center;
+            line-height: 1.2;
+          }
+          .kop-addr {
+            font-size: 8pt;
+            font-style: italic;
+            margin: 3px 0 0 0;
+            text-align: center;
+            line-height: 1.2;
+          }
+          .letter-info {
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-collapse: collapse;
+          }
+          .letter-info td {
+            vertical-align: top;
+            font-size: 11pt;
+            padding: 0;
+            line-height: 1.2;
+          }
+          .recipient {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            line-height: 1.25;
+          }
+          .content-p {
+            text-align: justify;
+            text-indent: 1cm;
+            margin-top: 0;
+            margin-bottom: 10px;
+            line-height: 1.25;
+          }
+          .student-table {
+            width: 85%;
+            margin-left: 1cm;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-collapse: collapse;
+          }
+          .student-table td {
+            padding: 1px 0;
+            font-size: 11pt;
+            vertical-align: top;
+            line-height: 1.2;
+          }
+          .sig-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+          }
+          .sig-table td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+            font-size: 11pt;
+            padding: 0;
+            line-height: 1.25;
+          }
+          .sig-space {
+            height: 50px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="Section1">
+          <!-- Kop Surat Resmi -->
+          <div class="kop-surat">
+            <div class="kop-prov">PEMERINTAH KOTA TANGERANG SELATAN</div>
+            <div class="kop-prov">DINAS PENDIDIKAN DAN KEBUDAYAAN</div>
+            <div class="kop-title">UPTD SMP NEGERI 22 KOTA TANGERANG SELATAN</div>
+            <div class="kop-addr">Jalan Nurul Ikhlas, Gang Poris Perigi, RT.7/RW.5, Kelurahan Lengkong Karya, Kecamatan Serpong Utara, Kota Tangerang Selatan, Banten | Email: info@smpn22kotatangsel.sch.id</div>
+          </div>
 
-    // Populate with high-fidelity letter HTML
-    printSection.innerHTML = `
-      <div class="p-10 max-w-4xl mx-auto text-slate-800 bg-white min-h-screen font-serif" style="font-family: 'Georgia', serif; font-size: 14px; line-height: 1.6;">
-        ${element.innerHTML}
-      </div>
+          <!-- Dynamic content -->
+          ${contentHtml}
+
+          <!-- Signature Panel -->
+          <table class="sig-table" style="width: 100%; border: none;">
+            <tr>
+              <td style="border: none; text-align: center; width: 50%; padding-top: 10px;">
+                <div>Mengetahui,</div>
+                <div>Kepala Sekolah UPTD SMPN 22</div>
+                <div class="sig-space"></div>
+                <div><b><u>( ___________________________ )</u></b></div>
+                <div style="font-size: 9.5pt; margin-top: 4px; color: #333333;">NIP. .................................................</div>
+              </td>
+              <td style="border: none; text-align: center; width: 50%; padding-top: 10px;">
+                <div>Tangerang Selatan, ${previewLetter.tanggal}</div>
+                <div>Guru Bimbingan Konseling</div>
+                <div class="sig-space"></div>
+                <div><b><u>( ___________________________ )</u></b></div>
+                <div style="font-size: 9.5pt; margin-top: 4px; color: #333333;">NIP. .................................................</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </body>
+      </html>
     `;
 
-    // Trigger Print
-    setTimeout(() => {
-      window.print();
-      
-      // Cleanup hook
-      const cleanup = () => {
-        if (printSection) {
-          printSection.innerHTML = '';
-        }
-      };
-
-      // Set timeout fallback & standard listener
-      window.addEventListener('afterprint', cleanup, { once: true });
-      setTimeout(cleanup, 1500);
-    }, 50);
+    const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Surat_${previewLetter.nomorSurat.replace(/\\|\//g, '_')}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
@@ -222,11 +545,18 @@ export default function DokumenSuratView({
                     className="p-2.5 border border-slate-200 bg-white rounded-xl w-full focus:outline-none focus:border-emerald-500"
                     required
                   >
-                    {db.siswa.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.nama} ({db.kelas.find(k => k.id === s.kelasId)?.namaKelas || '-'})
-                      </option>
-                    ))}
+                    {db.siswa.map(s => {
+                      const kObj = db.kelas.find(k => 
+                        k.id === s.kelasId || 
+                        k.namaKelas.toLowerCase().trim() === s.kelasId?.toLowerCase().trim()
+                      );
+                      const kNama = kObj?.namaKelas || s.kelasId || '-';
+                      return (
+                        <option key={s.id} value={s.id}>
+                          {s.nama} ({kNama})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -348,7 +678,11 @@ export default function DokumenSuratView({
           <div className="lg:col-span-3">
             {previewLetter ? (() => {
               const siswa = db.siswa.find(item => item.id === previewLetter.siswaId);
-              const kelas = db.kelas.find(k => k.id === siswa?.kelasId);
+              const kelasObj = db.kelas.find(k => 
+                k.id === siswa?.kelasId || 
+                k.namaKelas.toLowerCase().trim() === siswa?.kelasId?.toLowerCase().trim()
+              );
+              const kelasNama = kelasObj?.namaKelas || siswa?.kelasId || '-';
               const ot = db.orangTua.find(o => o.id === siswa?.id);
               return (
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg space-y-6">
@@ -356,89 +690,247 @@ export default function DokumenSuratView({
                   <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl -mt-2 -mx-2 mb-4 border border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400">PRATINJAU KOP SURAT RESMI</span>
                     <button 
-                      onClick={triggerPrint}
+                      onClick={triggerDownloadWord}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                      <Printer size={14} /> Cetak Sekarang (PDF)
+                      <FileDown size={14} /> Unduh Format Word (.doc)
                     </button>
                   </div>
 
                   {/* HIGH-FIDELITY printable frame */}
-                  <div id="printable-letter-container" className="p-8 border border-slate-200 bg-white shadow-sm font-serif max-w-xl mx-auto rounded-md text-[12px] text-slate-800 space-y-4">
+                  <div 
+                    id="printable-letter-container" 
+                    className="border border-slate-200 bg-white shadow-sm font-serif max-w-2xl mx-auto rounded-md text-slate-800 text-[11px]"
+                    style={{
+                      paddingTop: '2.5cm',
+                      paddingBottom: '2.5cm',
+                      paddingLeft: '2.5cm',
+                      paddingRight: '2.5cm',
+                      width: '100%',
+                      minHeight: '29.7cm',
+                      boxSizing: 'border-box',
+                      lineHeight: '1.3'
+                    }}
+                  >
                     
                     {/* Official Kop Surat Header */}
-                    <div className="text-center border-b-4 border-double border-black pb-2 space-y-0.5">
-                      <p className="font-bold text-sm tracking-wider uppercase">PEMERINTAH KOTA TANGERANG SELATAN</p>
-                      <p className="font-black text-base uppercase">UPTD SMPN 22 KOTA TANGERANG SELATAN</p>
-                      <p className="text-[10px] font-medium italic">Jl. Perumahan Pamulang Permai I, Pamulang Barat, Kec. Pamulang | Email: info@smpn22kotatangsel.sch.id</p>
+                    <div className="text-center border-b-4 border-double border-black pb-1.5 mb-4">
+                      <p className="font-bold text-xs tracking-wider uppercase leading-none">PEMERINTAH KOTA TANGERANG SELATAN</p>
+                      <p className="font-bold text-xs tracking-wider uppercase leading-none mt-1">DINAS PENDIDIKAN DAN KEBUDAYAAN</p>
+                      <p className="font-black text-sm uppercase leading-tight mt-1">UPTD SMP NEGERI 22 KOTA TANGERANG SELATAN</p>
+                      <p className="text-[8px] font-medium italic mt-1 leading-none">Jalan Nurul Ikhlas, Gang Poris Perigi, RT.7/RW.5, Kelurahan Lengkong Karya, Kecamatan Serpong Utara, Kota Tangerang Selatan, Banten | Email: info@smpn22kotatangsel.sch.id</p>
                     </div>
 
-                    {/* Date and No */}
-                    <div className="flex justify-between">
-                      <div>
-                        <p>Nomor : {previewLetter.nomorSurat}</p>
-                        <p>Lampiran: -</p>
-                        <p>Perihal : <u>{previewLetter.perihal}</u></p>
+                    {/* Dynamic letter body based on type */}
+                    {previewLetter.jenisSurat === 'Surat Kontrak Perilaku' ? (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <p className="font-bold text-xs uppercase underline">SURAT PERNYATAAN / KONTRAK PERILAKU TERTIB SISWA</p>
+                          <p className="text-[10px] mt-0.5">Nomor: {previewLetter.nomorSurat}</p>
+                        </div>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Yang bertanda tangan di bawah ini menerangkan komitmen bersama demi ketertiban sekolah dan pembinaan perkembangan karakter peserta didik UPTD SMP Negeri 22 Kota Tangerang Selatan:
+                        </p>
+
+                        <div className="pl-8 my-2">
+                          <table className="w-full text-left text-[11px]">
+                            <tbody>
+                              <tr>
+                                <td className="w-28 font-semibold">Nama Siswa</td>
+                                <td>: {siswa?.nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">NIS / NISN</td>
+                                <td>: {siswa?.nis} / {siswa?.nisn}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Kelas</td>
+                                <td>: {kelasNama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Alamat Rumah</td>
+                                <td>: {siswa?.alamat || '-'}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Dengan ini menyatakan secara sadar, jujur, dan sungguh-sungguh bahwa: {previewLetter.isiSurat}
+                        </p>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Demikian surat pernyataan kontrak perilaku tertib siswa ini dibuat dengan kesadaran penuh tanpa paksaan dari pihak manapun, demi masa depan kepribadian dan disiplin saya di lingkungan sekolah.
+                        </p>
                       </div>
-                      <p className="text-right">Jakarta, {previewLetter.tanggal}</p>
-                    </div>
+                    ) : previewLetter.jenisSurat === 'Surat Home Visit' ? (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <p className="font-bold text-xs uppercase underline">SURAT TUGAS KUNJUNGAN RUMAH (HOME VISIT)</p>
+                          <p className="text-[10px] mt-0.5">Nomor: {previewLetter.nomorSurat}</p>
+                        </div>
 
-                    {/* Recipient */}
-                    <div className="space-y-1">
-                      <p>Kepada Yth,</p>
-                      <p className="font-bold">Bapak/Ibu Orang Tua / Wali Murid dari {siswa?.nama}</p>
-                      <p>Di Tempat</p>
-                    </div>
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Berdasarkan perkembangan program bimbingan konseling dan tata tertib siswa, Kepala Sekolah UPTD SMP Negeri 22 Kota Tangerang Selatan memberikan tugas kepada guru bimbingan konseling untuk mengadakan kunjungan rumah (home visit) ke kediaman orang tua/wali dari peserta didik berikut:
+                        </p>
 
-                    {/* Greeting */}
-                    <p className="leading-relaxed">Dengan hormat,</p>
+                        <div className="pl-8 my-2">
+                          <table className="w-full text-left text-[11px]">
+                            <tbody>
+                              <tr>
+                                <td className="w-28 font-semibold">Nama Siswa</td>
+                                <td>: {siswa?.nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">NIS / NISN</td>
+                                <td>: {siswa?.nis} / {siswa?.nisn}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Kelas</td>
+                                <td>: {kelasNama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Alamat Kunjungan</td>
+                                <td>: {siswa?.alamat || '-'}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
 
-                    {/* Body content */}
-                    <p className="indent-8 leading-relaxed text-justify">
-                      Sehubungan dengan program bimbingan perkembangan karakter peserta didik UPTD SMPN 22 Kota Tangerang Selatan, kami mengundang Bapak/Ibu sekalian untuk berkoordinasi. {previewLetter.isiSurat}
-                    </p>
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Adapun deskripsi dan tujuan khusus pelaksanaan kunjungan rumah ini adalah: {previewLetter.isiSurat}
+                        </p>
 
-                    {/* Student particulars if applicable */}
-                    <div className="pl-8 space-y-1">
-                      <table className="w-full text-left">
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Demikian surat tugas kunjungan rumah ini diberikan untuk dilaksanakan dengan penuh tanggung jawab serta koordinasi yang baik bersama pihak orang tua/wali murid siswa yang bersangkutan.
+                        </p>
+                      </div>
+                    ) : previewLetter.jenisSurat === 'Surat Rujukan' ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between text-[11px]">
+                          <div>
+                            <p>Nomor : {previewLetter.nomorSurat}</p>
+                            <p>Lampiran: -</p>
+                            <p>Perihal : <u>Rujukan Layanan Khusus Ahli (Referral)</u></p>
+                          </div>
+                          <p className="text-right">Tangerang Selatan, {previewLetter.tanggal}</p>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <p>Kepada Yth,</p>
+                          <p className="font-bold">Pimpinan Lembaga Konsultasi Ahli / Psikolog Profesional</p>
+                          <p>Di Tempat</p>
+                        </div>
+
+                        <p className="leading-relaxed">Dengan hormat,</p>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Guna membantu mengoptimalkan tumbuh kembang serta membantu mengatasi hambatan psikologis atau akademis peserta didik kami secara mendalam, bersama surat ini kami merujuk siswa kami berikut:
+                        </p>
+
+                        <div className="pl-8 my-2">
+                          <table className="w-full text-left text-[11px]">
+                            <tbody>
+                              <tr>
+                                <td className="w-28 font-semibold">Nama Siswa</td>
+                                <td>: {siswa?.nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">NIS / NISN</td>
+                                <td>: {siswa?.nis} / {siswa?.nisn}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Kelas</td>
+                                <td>: {kelasNama}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Berdasarkan hasil analisis kami: {previewLetter.isiSurat}
+                        </p>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Demikian surat rujukan layanan khusus ini kami sampaikan. Atas bantuan profesional serta kerja sama yang baik dari pihak lembaga/psikolog, kami ucapkan banyak terima kasih.
+                        </p>
+                      </div>
+                    ) : (
+                      /* Surat Panggilan (default) */
+                      <div className="space-y-4">
+                        <div className="flex justify-between text-[11px]">
+                          <div>
+                            <p>Nomor : {previewLetter.nomorSurat}</p>
+                            <p>Lampiran: -</p>
+                            <p>Perihal : <u>{previewLetter.perihal}</u></p>
+                          </div>
+                          <p className="text-right">Tangerang Selatan, {previewLetter.tanggal}</p>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <p>Kepada Yth,</p>
+                          <p className="font-bold">Bapak/Ibu Orang Tua / Wali Murid dari {siswa?.nama}</p>
+                          <p>Di Tempat</p>
+                        </div>
+
+                        <p className="leading-relaxed">Dengan hormat,</p>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Sehubungan dengan program bimbingan perkembangan karakter peserta didik UPTD SMP Negeri 22 Kota Tangerang Selatan, kami mengundang Bapak/Ibu sekalian untuk menghadiri koordinasi perkembangan anak:
+                        </p>
+
+                        <div className="pl-8 my-2">
+                          <table className="w-full text-left text-[11px]">
+                            <tbody>
+                              <tr>
+                                <td className="w-28 font-semibold">Nama Siswa</td>
+                                <td>: {siswa?.nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">NIS / NISN</td>
+                                <td>: {siswa?.nis} / {siswa?.nisn}</td>
+                              </tr>
+                              <tr>
+                                <td className="font-semibold">Kelas</td>
+                                <td>: {kelasNama}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Adapun agenda pertemuan dan pembinaan yang perlu dibahas bersama adalah: {previewLetter.isiSurat}
+                        </p>
+
+                        <p className="indent-8 text-justify leading-relaxed">
+                          Demikian surat undangan koordinasi ini kami sampaikan. Atas perhatian, kehadiran, dan kerja sama yang baik dari Bapak/Ibu, kami mengucapkan banyak terima kasih.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Signature Panel */}
+                    <div className="pt-8">
+                      <table className="w-full text-center border-none text-[11px]" style={{ border: 'none', borderCollapse: 'collapse', width: '100%' }}>
                         <tbody>
                           <tr>
-                            <td className="w-28 font-semibold">Nama Siswa</td>
-                            <td>: {siswa?.nama}</td>
-                          </tr>
-                          <tr>
-                            <td className="font-semibold">NIS / NISN</td>
-                            <td>: {siswa?.nis} / {siswa?.nisn}</td>
-                          </tr>
-                          <tr>
-                            <td className="font-semibold">Kelas</td>
-                            <td>: {kelas?.namaKelas || '-'}</td>
+                            <td className="text-center" style={{ width: '50%', textAlign: 'center', border: 'none', padding: '0 10px', verticalAlign: 'top' }}>
+                              <p className="mb-12">Mengetahui,<br/>Kepala Sekolah UPTD SMPN 22</p>
+                              <div>
+                                <p className="font-bold"><u>( ___________________________ )</u></p>
+                                <p className="text-[9px] text-slate-500 mt-1">NIP. .................................................</p>
+                              </div>
+                            </td>
+                            <td className="text-center" style={{ width: '50%', textAlign: 'center', border: 'none', padding: '0 10px', verticalAlign: 'top' }}>
+                              <p className="mb-12">Tangerang Selatan, {previewLetter.tanggal}<br/>Guru Bimbingan Konseling</p>
+                              <div>
+                                <p className="font-bold"><u>( ___________________________ )</u></p>
+                                <p className="text-[9px] text-slate-500 mt-1">NIP. .................................................</p>
+                              </div>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
-                    </div>
-
-                    {/* Closing */}
-                    <p className="indent-8 leading-relaxed text-justify">
-                      Demikian surat pemberitahuan ini kami sampaikan. Atas perhatian, kerja sama, dan kehadiran Bapak/Ibu, kami mengucapkan banyak terima kasih.
-                    </p>
-
-                    {/* Signature Panel */}
-                    <div className="pt-6 grid grid-cols-2 gap-4 text-center">
-                      <div className="space-y-12">
-                        <p>Mengetahui,<br/>Kepala Sekolah</p>
-                        <div>
-                          <p className="font-bold underline">Salim, S.Pd., M.Hum.</p>
-                          <p className="text-[10px] text-slate-500">NIP. 700412 199903 1 004</p>
-                        </div>
-                      </div>
-                      <div className="space-y-12">
-                        <p>Hormat kami,<br/>Guru Bimbingan Konseling</p>
-                        <div>
-                          <p className="font-bold underline">Sulaiman, S.Psi., MM</p>
-                          <p className="text-[10px] text-slate-500">NIP. 198209202022211009</p>
-                        </div>
-                      </div>
                     </div>
 
                   </div>

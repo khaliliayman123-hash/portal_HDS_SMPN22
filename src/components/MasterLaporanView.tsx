@@ -285,7 +285,229 @@ export default function MasterLaporanView({
   };
 
   const handlePrintLaporan = () => {
-    window.print();
+    const filterText = `Semester: ${filterSemester === 'All' ? 'Semua Semester' : 'Semester ' + filterSemester} | Kelas: ${filterKelasId === 'All' ? 'Semua Kelas' : db.kelas.find(k => k.id === filterKelasId)?.namaKelas || '-'} | TP: ${filterTahunText || 'Semua'}`;
+
+    const printDate = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Programmatically construct rows for high fidelity
+    let rowsHTML = '';
+    reportSiswaList.forEach((s, idx) => {
+      const kelasObj = db.kelas.find(k => 
+        k.id === s.kelasId || 
+        k.namaKelas.toLowerCase().trim() === s.kelasId?.toLowerCase().trim()
+      );
+      const kelas = kelasObj?.namaKelas || s.kelasId || '-';
+      const originalPts = db.pelanggaran.filter(p => p.siswaId === s.id).reduce((sum, p) => sum + Number(p.poin), 0);
+      const remisiPts = (db.remisiPoin || []).filter(r => r.siswaId === s.id).reduce((sum, r) => sum + Number(r.poin), 0);
+      const pts = Math.max(0, originalPts - remisiPts);
+      const raport = db.akademik.find(a => a.id === s.id)?.rataRataRaport || '-';
+      const ot = db.orangTua.find(o => o.id === s.id)?.pendidikanOrangTua || '-';
+
+      rowsHTML += `
+        <tr>
+          <td style="text-align: center; padding: 8px; border: 1px solid #000000;">${idx + 1}</td>
+          <td style="padding: 8px; border: 1px solid #000000; font-weight: bold;">${s.nama}</td>
+          <td style="text-align: center; padding: 8px; border: 1px solid #000000; font-family: monospace;">${s.nis}</td>
+          <td style="text-align: center; padding: 8px; border: 1px solid #000000;">${kelas}</td>
+          <td style="text-align: center; padding: 8px; border: 1px solid #000000; font-weight: bold;">${pts} Poin</td>
+          <td style="text-align: center; padding: 8px; border: 1px solid #000000; font-weight: bold;">${raport}</td>
+          <td style="padding: 8px; border: 1px solid #000000;">${ot}</td>
+        </tr>
+      `;
+    });
+
+    if (reportSiswaList.length === 0) {
+      rowsHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 20px; border: 1px solid #000000; color: #555555;">
+            Tidak ada catatan penarikan laporan cocok dengan filter di atas.
+          </td>
+        </tr>
+      `;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Laporan Rekapitulasi BK - ${new Date().toISOString().split('T')[0]}</title>
+            <style>
+              @page {
+                size: A4 portrait;
+                margin: 1.5cm;
+              }
+              body {
+                font-family: 'Times New Roman', Times, serif;
+                color: #000000;
+                margin: 0;
+                padding: 0;
+                line-height: 1.4;
+                font-size: 10.5pt;
+              }
+              .header-container {
+                border-bottom: 4px double #000000;
+                padding-bottom: 12px;
+                margin-bottom: 20px;
+                text-align: center;
+              }
+              .institution-header {
+                font-size: 11pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                margin: 0;
+                letter-spacing: 0.5px;
+              }
+              .school-title {
+                font-size: 14pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                margin: 4px 0 0 0;
+                letter-spacing: 1px;
+              }
+              .school-address {
+                font-size: 8.5pt;
+                font-weight: normal;
+                font-style: italic;
+                margin: 4px 0 0 0;
+                color: #333333;
+              }
+              .doc-title {
+                text-align: center;
+                font-size: 12pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                margin: 20px 0 5px 0;
+                letter-spacing: 0.5px;
+              }
+              .meta-text {
+                text-align: center;
+                font-size: 9.5pt;
+                margin-bottom: 25px;
+                font-style: italic;
+                color: #111111;
+              }
+              .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9.5pt;
+                margin-top: 10px;
+                margin-bottom: 35px;
+              }
+              .data-table th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 9pt;
+                padding: 10px 8px;
+                border: 1px solid #000000;
+                text-align: center;
+              }
+              .sig-section {
+                margin-top: 40px;
+                width: 100%;
+                page-break-inside: avoid;
+              }
+              .sig-table {
+                width: 100%;
+                border: none;
+              }
+              .sig-table td {
+                width: 50%;
+                text-align: center;
+                vertical-align: top;
+                font-size: 10.5pt;
+                border: none;
+                padding: 0;
+              }
+              .sig-space {
+                height: 65px;
+              }
+              .sig-line {
+                display: inline-block;
+                width: 200px;
+                border-bottom: 1px solid #000000;
+                margin-bottom: 5px;
+              }
+              .sig-title {
+                margin-bottom: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <!-- Kop Surat Resmi -->
+            <div class="header-container">
+              <div class="institution-header">PEMERINTAH KOTA TANGERANG SELATAN</div>
+              <div class="institution-header">DINAS PENDIDIKAN DAN KEBUDAYAAN</div>
+              <div class="school-title">UPTD SMP NEGERI 22 KOTA TANGERANG SELATAN</div>
+              <div class="school-address">Jl. Nurul Huda No.22, Kec. Serpong, Kota Tangerang Selatan, Banten 15310</div>
+            </div>
+
+            <!-- Judul Dokumen -->
+            <div class="doc-title">LAPORAN REKAPITULASI BIMBINGAN KONSELING SISWA</div>
+            <div class="meta-text">
+              Filter Parameter: ${filterText}<br/>
+              Dicetak Pada: ${printDate}
+            </div>
+
+            <!-- Tabel Data -->
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 5%;">No</th>
+                  <th style="width: 25%; text-align: left;">Nama Siswa</th>
+                  <th style="width: 12%;">NIS</th>
+                  <th style="width: 12%;">Kelas</th>
+                  <th style="width: 15%;">Poin Disiplin</th>
+                  <th style="width: 13%;">Rapor (Rata-rata)</th>
+                  <th style="width: 18%; text-align: left;">Pendidikan Orang Tua</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHTML}
+              </tbody>
+            </table>
+
+            <!-- Tanda Tangan Seksi -->
+            <div class="sig-section">
+              <table class="sig-table">
+                <tr>
+                  <td>
+                    <div class="sig-title">Mengetahui,</div>
+                    <div class="sig-title">Kepala Sekolah</div>
+                    <div class="sig-space"></div>
+                    <div class="sig-line"></div>
+                    <div>NIP. &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+                  </td>
+                  <td>
+                    <div class="sig-title">Tangerang Selatan, ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div class="sig-title">Koordinator BK</div>
+                    <div class="sig-space"></div>
+                    <div class="sig-line"></div>
+                    <div>NIP. &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
   };
 
   const handlePrintChartPDF = () => {
