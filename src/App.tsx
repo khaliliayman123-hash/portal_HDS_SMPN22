@@ -109,6 +109,40 @@ export default function App() {
   }, []);
 
   const loadDatabase = async (checkConnection: boolean = false, localOnly: boolean = false) => {
+    // Optimization for fast startup: If not checking connection and not explicitly localOnly,
+    // load cached database instantly to unblock the UI and fetch remote data in background (SWR pattern)
+    if (!checkConnection && !localOnly) {
+      try {
+        const localData = await apiService.getData(false, true); // true = local only (extremely fast)
+        setDb(localData);
+        setGasUrlInput(localData.config.gasApiUrl || '');
+        setSpreadsheetIdInput(localData.config.spreadsheetId || '');
+        setIsLoading(false); // Instantly enters the app!
+
+        if (localData.config.gasApiUrl) {
+          setConnStatus('checking');
+          setConnMessage('Menghubungkan ke awan...');
+          
+          // Background fetch from Google Sheets
+          apiService.getData(false, false).then((remoteData) => {
+            setDb(remoteData);
+            setConnStatus('connected');
+            setConnMessage('Koneksi berhasil dan data terbaru telah disinkronkan!');
+          }).catch((err) => {
+            console.warn('Background sync failed, using cached local data:', err);
+            setConnStatus('failed');
+            setConnMessage('Gagal sinkronisasi data awan. Berjalan dalam mode lokal offline.');
+          });
+        } else {
+          setConnStatus('idle');
+        }
+      } catch (e) {
+        console.error('Failed to load initial local database', e);
+        setIsLoading(false);
+      }
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await apiService.getData(false, localOnly);
