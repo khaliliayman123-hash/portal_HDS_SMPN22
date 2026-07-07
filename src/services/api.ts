@@ -560,26 +560,29 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return r;
   });
 
-  // Update class Wali Kelas distribution and repair Google Sheets date/time formatting errors in class names (e.g. Jam 8-5 -> 8-5)
+  // Update class Wali Kelas distribution and repair Google Sheets date/time formatting errors in class names (e.g. Jam 8-5 -> Kelas 8-5)
   const redirectKelasIdMap: { [oldId: string]: string } = {};
   const standardKelasMap: { [key: string]: string } = {};
   
   // Map our standard 33 class short names to standard IDs 'kl-1' through 'kl-33'
   for (let i = 1; i <= 11; i++) {
     standardKelasMap[`7-${i}`] = `kl-${i}`;
+    standardKelasMap[`Kelas 7-${i}`] = `kl-${i}`;
   }
   for (let i = 1; i <= 11; i++) {
     standardKelasMap[`8-${i}`] = `kl-${i + 11}`;
+    standardKelasMap[`Kelas 8-${i}`] = `kl-${i + 11}`;
   }
   for (let i = 1; i <= 11; i++) {
     standardKelasMap[`9-${i}`] = `kl-${i + 22}`;
+    standardKelasMap[`Kelas 9-${i}`] = `kl-${i + 22}`;
   }
 
   // Helper function to normalize any class name, handling all Google Sheets locale time and date parsing side-effects
   const normalizeClassName = (rawName: string): string => {
     let name = String(rawName || '').trim();
     
-    // Remove prefixes
+    // Remove prefixes first to ensure standard parsing
     if (name.startsWith('Jam ')) {
       name = name.slice(4).trim();
     }
@@ -587,22 +590,30 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       name = name.slice(6).trim();
     }
     
-    // 1. Check if it's already a standard class like "7-1" to "9-11"
+    // 1. Check if it matches a standard grade-rombel format e.g., "7-1" to "9-11"
     const stdPattern = /^([789])-([1-9]|1[01])$/;
-    if (stdPattern.test(name)) {
-      return name;
+    const stdMatch = name.match(stdPattern);
+    if (stdMatch) {
+      return `Kelas ${stdMatch[1]}-${stdMatch[2]}`;
+    }
+
+    // 2. If it already matches "Kelas 7-1" to "Kelas 9-11"
+    const kelasPattern = /^Kelas\s+([789])-([1-9]|1[01])$/i;
+    const kelasMatch = name.match(kelasPattern);
+    if (kelasMatch) {
+      return `Kelas ${kelasMatch[1]}-${kelasMatch[2]}`;
     }
     
-    // 2. Time/date parser conversion: e.g. "07:01:00", "08:05:00", "08.05", "8:5" -> "8-5"
+    // 3. Time/date parser conversion: e.g. "07:01:00", "08:05:00", "08.05", "8:5" -> "Kelas 8-5"
     const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
     const timeMatch = name.match(timePattern);
     if (timeMatch) {
       const grade = parseInt(timeMatch[1], 10);
       const rombel = parseInt(timeMatch[2], 10);
-      return `${grade}-${rombel}`;
+      return `Kelas ${grade}-${rombel}`;
     }
     
-    // 3. Date parser conversion: e.g. "2026-01-07", "2026-07-01", "2026-01-03", "07/01/2026", "1/7/2026"
+    // 4. Date parser conversion: e.g. "2026-01-07", "2026-07-01", "2026-01-03", "07/01/2026", "1/7/2026"
     // Match standard YYYY-MM-DD or DD/MM/YYYY or MM/DD/YYYY
     const datePattern = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:T.*)?$/;
     const datePatternDMY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:T.*)?$/;
@@ -626,23 +637,23 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     if (year > 0 && month > 0 && day > 0) {
       // A. If Month is 7, 8, or 9 (Grade) and Day is 1-11 (Rombel)
       if ((month === 7 || month === 8 || month === 9) && (day >= 1 && day <= 11)) {
-        return `${month}-${day}`;
+        return `Kelas ${month}-${day}`;
       }
       // B. If Day is 7, 8, or 9 (Grade) and Month is 1-11 (Rombel)
       if ((day === 7 || day === 8 || day === 9) && (month >= 1 && month <= 11)) {
-        return `${day}-${month}`;
+        return `Kelas ${day}-${month}`;
       }
       // C. If Month is 1, 2, or 3 (Grade - 6) and Day is 1-11 (Rombel)
       if ((month === 1 || month === 2 || month === 3) && (day >= 1 && day <= 11)) {
-        return `${month + 6}-${day}`;
+        return `Kelas ${month + 6}-${day}`;
       }
       // D. If Day is 1, 2, or 3 (Grade - 6) and Month is 1-11 (Rombel)
       if ((day === 1 || day === 2 || day === 3) && (month >= 1 && month <= 11)) {
-        return `${day + 6}-${month}`;
+        return `Kelas ${day + 6}-${month}`;
       }
     }
     
-    return name;
+    return rawName;
   };
 
   // Pre-process and normalize class names

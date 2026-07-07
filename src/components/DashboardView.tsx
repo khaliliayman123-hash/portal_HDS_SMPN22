@@ -319,7 +319,7 @@ export default function DashboardView({ db, currentUser, onNavigateToSiswa }: Da
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-bold text-xs text-rose-900">{s.nama}</p>
-                          <p className="text-[10px] text-rose-700">NIS: {s.nis} | Kelas {db.kelas.find(k => k.id === s.kelasId)?.namaKelas || '-'}</p>
+                          <p className="text-[10px] text-rose-700">NIS: {s.nis} | {(() => { const name = db.kelas.find(k => k.id === s.kelasId)?.namaKelas || '-'; return name.startsWith('Kelas ') ? name : `Kelas ${name}`; })()}</p>
                         </div>
                         <span className="bg-rose-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
                           {s.pts} Pts

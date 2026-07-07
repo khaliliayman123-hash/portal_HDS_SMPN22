@@ -383,12 +383,17 @@ export default function SiswaView({
               if (val.startsWith('Kelas ')) val = val.slice(6).trim();
               
               const stdPattern = /^([789])-([1-9]|1[01])$/;
-              if (stdPattern.test(val)) return val;
+              const stdMatch = val.match(stdPattern);
+              if (stdMatch) return `Kelas ${stdMatch[1]}-${stdMatch[2]}`;
+              
+              const kelasPattern = /^Kelas\s+([789])-([1-9]|1[01])$/i;
+              const kelasMatch = val.match(kelasPattern);
+              if (kelasMatch) return `Kelas ${kelasMatch[1]}-${kelasMatch[2]}`;
               
               const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
               const timeMatch = val.match(timePattern);
               if (timeMatch) {
-                return `${parseInt(timeMatch[1], 10)}-${parseInt(timeMatch[2], 10)}`;
+                return `Kelas ${parseInt(timeMatch[1], 10)}-${parseInt(timeMatch[2], 10)}`;
               }
               
               const datePattern = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:T.*)?$/;
@@ -404,12 +409,12 @@ export default function SiswaView({
                 }
               }
               if (y > 0 && mo > 0 && d > 0) {
-                if ((mo === 7 || mo === 8 || mo === 9) && (d >= 1 && d <= 11)) return `${mo}-${d}`;
-                if ((d === 7 || d === 8 || d === 9) && (mo >= 1 && mo <= 11)) return `${d}-${mo}`;
-                if ((mo === 1 || mo === 2 || mo === 3) && (d >= 1 && d <= 11)) return `${mo + 6}-${d}`;
-                if ((d === 1 || d === 2 || d === 3) && (mo >= 1 && mo <= 11)) return `${d + 6}-${mo}`;
+                if ((mo === 7 || mo === 8 || mo === 9) && (d >= 1 && d <= 11)) return `Kelas ${mo}-${d}`;
+                if ((d === 7 || d === 8 || d === 9) && (mo >= 1 && mo <= 11)) return `Kelas ${d}-${mo}`;
+                if ((mo === 1 || mo === 2 || mo === 3) && (d >= 1 && d <= 11)) return `Kelas ${mo + 6}-${d}`;
+                if ((d === 1 || d === 2 || d === 3) && (mo >= 1 && mo <= 11)) return `Kelas ${d + 6}-${mo}`;
               }
-              return val;
+              return raw;
             };
             const cleanRawKelas = normalizeClassNameLocal(rawKelas);
             const matchKelas = db.kelas.find(k => k.namaKelas.toLowerCase().trim() === cleanRawKelas.toLowerCase().trim());
@@ -1327,7 +1332,7 @@ export default function SiswaView({
                 </div>
                 
                 <h3 className="font-bold text-sm mt-3">{viewingSiswa.nama}</h3>
-                <p className="text-[10px] text-emerald-100">NIS: {viewingSiswa.nis} | Kelas {db.kelas.find(k => k.id === viewingSiswa.kelasId || k.namaKelas.toLowerCase().trim() === viewingSiswa.kelasId?.toLowerCase().trim())?.namaKelas || viewingSiswa.kelasId || '-'}</p>
+                <p className="text-[10px] text-emerald-100">NIS: {viewingSiswa.nis} | {(() => { const name = db.kelas.find(k => k.id === viewingSiswa.kelasId || k.namaKelas.toLowerCase().trim() === viewingSiswa.kelasId?.toLowerCase().trim())?.namaKelas || viewingSiswa.kelasId || '-'; return name.startsWith('Kelas ') ? name : `Kelas ${name}`; })()}</p>
                 
                 {/* Visual points tracker */}
                 {(() => {
