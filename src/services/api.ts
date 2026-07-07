@@ -358,7 +358,7 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized_v5) {
+  if (parsed && parsed._sanitized_v6) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -575,11 +575,9 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     standardKelasMap[`9-${i}`] = `kl-${i + 22}`;
   }
 
-  // Pre-process and normalize class names
-  parsed.kelas = parsed.kelas.map((k: any) => {
-    if (!k) return k;
-
-    let name = String(k.namaKelas || '').trim();
+  // Helper function to normalize any class name, handling all Google Sheets locale time and date parsing side-effects
+  const normalizeClassName = (rawName: string): string => {
+    let name = String(rawName || '').trim();
     
     // Remove prefixes
     if (name.startsWith('Jam ')) {
@@ -589,14 +587,69 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       name = name.slice(6).trim();
     }
     
-    // Time/date parser conversion: e.g. "08:05:00", "08.05", "8:5" -> "8-5"
-    const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
-    const match = name.match(timePattern);
-    if (match) {
-      const grade = match[1];
-      const rombel = match[2];
-      name = `${grade}-${rombel}`;
+    // 1. Check if it's already a standard class like "7-1" to "9-11"
+    const stdPattern = /^([789])-([1-9]|1[01])$/;
+    if (stdPattern.test(name)) {
+      return name;
     }
+    
+    // 2. Time/date parser conversion: e.g. "07:01:00", "08:05:00", "08.05", "8:5" -> "8-5"
+    const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
+    const timeMatch = name.match(timePattern);
+    if (timeMatch) {
+      const grade = parseInt(timeMatch[1], 10);
+      const rombel = parseInt(timeMatch[2], 10);
+      return `${grade}-${rombel}`;
+    }
+    
+    // 3. Date parser conversion: e.g. "2026-01-07", "2026-07-01", "2026-01-03", "07/01/2026", "1/7/2026"
+    // Match standard YYYY-MM-DD or DD/MM/YYYY or MM/DD/YYYY
+    const datePattern = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:T.*)?$/;
+    const datePatternDMY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:T.*)?$/;
+    
+    let match = name.match(datePattern);
+    let year = 0, month = 0, day = 0;
+    
+    if (match) {
+      year = parseInt(match[1], 10);
+      month = parseInt(match[2], 10);
+      day = parseInt(match[3], 10);
+    } else {
+      match = name.match(datePatternDMY);
+      if (match) {
+        day = parseInt(match[1], 10);
+        month = parseInt(match[2], 10);
+        year = parseInt(match[3], 10);
+      }
+    }
+    
+    if (year > 0 && month > 0 && day > 0) {
+      // A. If Month is 7, 8, or 9 (Grade) and Day is 1-11 (Rombel)
+      if ((month === 7 || month === 8 || month === 9) && (day >= 1 && day <= 11)) {
+        return `${month}-${day}`;
+      }
+      // B. If Day is 7, 8, or 9 (Grade) and Month is 1-11 (Rombel)
+      if ((day === 7 || day === 8 || day === 9) && (month >= 1 && month <= 11)) {
+        return `${day}-${month}`;
+      }
+      // C. If Month is 1, 2, or 3 (Grade - 6) and Day is 1-11 (Rombel)
+      if ((month === 1 || month === 2 || month === 3) && (day >= 1 && day <= 11)) {
+        return `${month + 6}-${day}`;
+      }
+      // D. If Day is 1, 2, or 3 (Grade - 6) and Month is 1-11 (Rombel)
+      if ((day === 1 || day === 2 || day === 3) && (month >= 1 && month <= 11)) {
+        return `${day + 6}-${month}`;
+      }
+    }
+    
+    return name;
+  };
+
+  // Pre-process and normalize class names
+  parsed.kelas = parsed.kelas.map((k: any) => {
+    if (!k) return k;
+
+    const name = normalizeClassName(k.namaKelas);
 
     if (k.namaKelas !== name) {
       k.namaKelas = name;
@@ -684,9 +737,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     
     // 2. Also handle if the student's kelasId is a raw name string instead of an ID (some Google Sheets sync can return name string)
     if (s.kelasId && !s.kelasId.startsWith('kl-')) {
-      const cleanName = String(s.kelasId).trim()
-        .replace(/^Jam /i, '')
-        .replace(/^Kelas /i, '');
+      const cleanName = normalizeClassName(s.kelasId);
       const standardId = standardKelasMap[cleanName];
       if (standardId) {
         s.kelasId = standardId;
@@ -756,7 +807,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized_v5 = true;
+  parsed._sanitized_v6 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 

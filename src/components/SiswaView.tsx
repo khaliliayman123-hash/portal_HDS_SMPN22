@@ -377,7 +377,42 @@ export default function SiswaView({
             const isNew = !existingSiswa;
 
             const rawKelas = row[11] || '';
-            const matchKelas = db.kelas.find(k => k.namaKelas.toLowerCase().trim() === rawKelas.toLowerCase().trim());
+            const normalizeClassNameLocal = (raw: string): string => {
+              let val = String(raw || '').trim();
+              if (val.startsWith('Jam ')) val = val.slice(4).trim();
+              if (val.startsWith('Kelas ')) val = val.slice(6).trim();
+              
+              const stdPattern = /^([789])-([1-9]|1[01])$/;
+              if (stdPattern.test(val)) return val;
+              
+              const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
+              const timeMatch = val.match(timePattern);
+              if (timeMatch) {
+                return `${parseInt(timeMatch[1], 10)}-${parseInt(timeMatch[2], 10)}`;
+              }
+              
+              const datePattern = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:T.*)?$/;
+              const datePatternDMY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:T.*)?$/;
+              let m = val.match(datePattern);
+              let y = 0, mo = 0, d = 0;
+              if (m) {
+                y = parseInt(m[1], 10); mo = parseInt(m[2], 10); d = parseInt(m[3], 10);
+              } else {
+                m = val.match(datePatternDMY);
+                if (m) {
+                  d = parseInt(m[1], 10); mo = parseInt(m[2], 10); y = parseInt(m[3], 10);
+                }
+              }
+              if (y > 0 && mo > 0 && d > 0) {
+                if ((mo === 7 || mo === 8 || mo === 9) && (d >= 1 && d <= 11)) return `${mo}-${d}`;
+                if ((d === 7 || d === 8 || d === 9) && (mo >= 1 && mo <= 11)) return `${d}-${mo}`;
+                if ((mo === 1 || mo === 2 || mo === 3) && (d >= 1 && d <= 11)) return `${mo + 6}-${d}`;
+                if ((d === 1 || d === 2 || d === 3) && (mo >= 1 && mo <= 11)) return `${d + 6}-${mo}`;
+              }
+              return val;
+            };
+            const cleanRawKelas = normalizeClassNameLocal(rawKelas);
+            const matchKelas = db.kelas.find(k => k.namaKelas.toLowerCase().trim() === cleanRawKelas.toLowerCase().trim());
             const kelasId = matchKelas ? matchKelas.id : (db.kelas[0]?.id || 'kelas-vii-a');
             const defaultTP = db.tahunPelajaran.find(tp => tp.isActive)?.tahun || '2025/2026';
 
