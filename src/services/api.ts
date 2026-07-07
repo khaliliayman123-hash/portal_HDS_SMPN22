@@ -358,7 +358,7 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized) {
+  if (parsed && parsed._sanitized_v3) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -560,9 +560,29 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return r;
   });
 
-  // Update class Wali Kelas distribution
+  // Update class Wali Kelas distribution and repair Google Sheets date/time formatting errors in class names (e.g. Jam 8-5 -> 8-5)
   parsed.kelas = parsed.kelas.map((k: any) => {
     if (!k) return k;
+
+    let name = String(k.namaKelas || '').trim();
+    
+    // 1. If it starts with "Jam ", e.g. "Jam 8-5", convert to "8-5"
+    if (name.startsWith('Jam ')) {
+      name = name.slice(4).trim();
+      k.namaKelas = name;
+      migrated = true;
+    }
+    
+    // 2. Handle standard excel / sheet date/time parsing like "08:05:00", "08.05", "8:5" -> "8-5"
+    const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
+    const match = name.match(timePattern);
+    if (match) {
+      const grade = match[1];
+      const rombel = match[2];
+      k.namaKelas = `${grade}-${rombel}`;
+      migrated = true;
+    }
+
     const idNum = parseInt(k.id.replace('kl-', ''), 10);
     if (idNum >= 1 && idNum <= 11) {
       if (k.waliKelasId !== 'usr-3') {
@@ -642,7 +662,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized = true;
+  parsed._sanitized_v3 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 

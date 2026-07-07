@@ -257,37 +257,59 @@ export default function KonselingView({
     if (activeTab === 'konseling') {
       return db.konseling.filter(k => {
         const siswa = db.siswa.find(s => s.id === k.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || k.nomorKonseling.toLowerCase().includes(q) || k.permasalahan.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const nomorKonseling = String(k.nomorKonseling || '').toLowerCase();
+        const permasalahan = String(k.permasalahan || '').toLowerCase();
+        return (siswaNama.includes(q) || nomorKonseling.includes(q) || permasalahan.includes(q));
       });
     } else if (activeTab === 'pelanggaran') {
       return db.pelanggaran.filter(p => {
         const siswa = db.siswa.find(s => s.id === p.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || p.jenisPelanggaran.toLowerCase().includes(q) || p.kategori.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const jenisPelanggaran = String(p.jenisPelanggaran || '').toLowerCase();
+        const kategori = String(p.kategori || '').toLowerCase();
+        return (siswaNama.includes(q) || jenisPelanggaran.includes(q) || kategori.includes(q));
       });
     } else if (activeTab === 'remisi') {
       return (db.remisiPoin || []).filter(r => {
         const siswa = db.siswa.find(s => s.id === r.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || r.jenisRemisi.toLowerCase().includes(q) || r.kategori.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const jenisRemisi = String(r.jenisRemisi || '').toLowerCase();
+        const kategori = String(r.kategori || '').toLowerCase();
+        return (siswaNama.includes(q) || jenisRemisi.includes(q) || kategori.includes(q));
       });
     } else if (activeTab === 'prestasi') {
       return db.prestasi.filter(p => {
         const siswa = db.siswa.find(s => s.id === p.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || p.namaPrestasi.toLowerCase().includes(q) || p.tingkat.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const namaPrestasi = String(p.namaPrestasi || '').toLowerCase();
+        const tingkat = String(p.tingkat || '').toLowerCase();
+        return (siswaNama.includes(q) || namaPrestasi.includes(q) || tingkat.includes(q));
       });
     } else if (activeTab === 'asesmen') {
       return db.asesmen.filter(a => {
         const siswa = db.siswa.find(s => s.id === a.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || a.akpd?.toLowerCase().includes(q) || a.iq?.toString().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const akpd = String(a.akpd || '').toLowerCase();
+        const iq = String(a.iq || '').toLowerCase();
+        return (siswaNama.includes(q) || akpd.includes(q) || iq.includes(q));
       });
     } else if (activeTab === 'homevisit') {
       return db.homeVisit.filter(h => {
         const siswa = db.siswa.find(s => s.id === h.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || h.tujuan.toLowerCase().includes(q) || h.hasil.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const tujuan = String(h.tujuan || '').toLowerCase();
+        const hasil = String(h.hasil || '').toLowerCase();
+        return (siswaNama.includes(q) || tujuan.includes(q) || hasil.includes(q));
       });
     } else if (activeTab === 'kehadiran') {
       return (db.kehadiran || []).filter(h => {
         const siswa = db.siswa.find(s => s.id === h.siswaId);
-        return (siswa?.nama.toLowerCase().includes(q) || h.mingguKe.toLowerCase().includes(q) || h.bulan.toLowerCase().includes(q) || h.keterangan?.toLowerCase().includes(q));
+        const siswaNama = String(siswa?.nama || '').toLowerCase();
+        const mingguKe = String(h.mingguKe || '').toLowerCase();
+        const bulan = String(h.bulan || '').toLowerCase();
+        const keterangan = String(h.keterangan || '').toLowerCase();
+        return (siswaNama.includes(q) || mingguKe.includes(q) || bulan.includes(q) || keterangan.includes(q));
       });
     }
     return [];

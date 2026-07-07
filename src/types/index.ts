@@ -284,6 +284,7 @@ export interface DatabaseState {
   logAktivitas: LogAktivitas[];
   kehadiran?: Kehadiran[];
   _sanitized?: boolean;
+  _sanitized_v3?: boolean;
   config: {
     gasApiUrl: string;
     spreadsheetId?: string;

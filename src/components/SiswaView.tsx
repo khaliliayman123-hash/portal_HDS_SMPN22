@@ -746,9 +746,13 @@ export default function SiswaView({
   const filteredStudents = useMemo(() => {
     return db.siswa
       .filter((s) => {
-        const matchesSearch = s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              s.nis.includes(searchQuery) || 
-                              s.nisn.includes(searchQuery);
+        const nameStr = s.nama ? String(s.nama).toLowerCase() : '';
+        const nisStr = s.nis ? String(s.nis) : '';
+        const nisnStr = s.nisn ? String(s.nisn) : '';
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = nameStr.includes(q) || 
+                              nisStr.includes(searchQuery) || 
+                              nisnStr.includes(searchQuery);
         const matchesKelas = selectedKelas === 'All' || s.kelasId === selectedKelas;
         const matchesGender = selectedGender === 'All' || s.jenisKelamin === selectedGender;
         return matchesSearch && matchesKelas && matchesGender;
