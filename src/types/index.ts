@@ -286,6 +286,7 @@ export interface DatabaseState {
   _sanitized?: boolean;
   _sanitized_v3?: boolean;
   _sanitized_v4?: boolean;
+  _sanitized_v5?: boolean;
   config: {
     gasApiUrl: string;
     spreadsheetId?: string;
