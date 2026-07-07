@@ -358,7 +358,7 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized_v3) {
+  if (parsed && parsed._sanitized_v4) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -561,46 +561,140 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   });
 
   // Update class Wali Kelas distribution and repair Google Sheets date/time formatting errors in class names (e.g. Jam 8-5 -> 8-5)
+  const redirectKelasIdMap: { [oldId: string]: string } = {};
+  const standardKelasMap: { [key: string]: string } = {};
+  
+  // Map our standard 33 class short names to standard IDs 'kl-1' through 'kl-33'
+  for (let i = 1; i <= 11; i++) {
+    standardKelasMap[`7-${i}`] = `kl-${i}`;
+  }
+  for (let i = 1; i <= 11; i++) {
+    standardKelasMap[`8-${i}`] = `kl-${i + 11}`;
+  }
+  for (let i = 1; i <= 11; i++) {
+    standardKelasMap[`9-${i}`] = `kl-${i + 22}`;
+  }
+
+  // Pre-process and normalize class names
   parsed.kelas = parsed.kelas.map((k: any) => {
     if (!k) return k;
 
     let name = String(k.namaKelas || '').trim();
     
-    // 1. If it starts with "Jam ", e.g. "Jam 8-5", convert to "8-5"
+    // Remove prefixes
     if (name.startsWith('Jam ')) {
       name = name.slice(4).trim();
-      k.namaKelas = name;
-      migrated = true;
+    }
+    if (name.startsWith('Kelas ')) {
+      name = name.slice(6).trim();
     }
     
-    // 2. Handle standard excel / sheet date/time parsing like "08:05:00", "08.05", "8:5" -> "8-5"
+    // Time/date parser conversion: e.g. "08:05:00", "08.05", "8:5" -> "8-5"
     const timePattern = /^0?([789])[:.]0?([1-9]|1[01])(?:[:.]00)?$/;
     const match = name.match(timePattern);
     if (match) {
       const grade = match[1];
       const rombel = match[2];
-      k.namaKelas = `${grade}-${rombel}`;
+      name = `${grade}-${rombel}`;
+    }
+
+    if (k.namaKelas !== name) {
+      k.namaKelas = name;
       migrated = true;
     }
 
+    // Assign appropriate wali kelas
     const idNum = parseInt(k.id.replace('kl-', ''), 10);
-    if (idNum >= 1 && idNum <= 11) {
-      if (k.waliKelasId !== 'usr-3') {
-        k.waliKelasId = 'usr-3';
+    if (!isNaN(idNum)) {
+      if (idNum >= 1 && idNum <= 11) {
+        if (k.waliKelasId !== 'usr-3') {
+          k.waliKelasId = 'usr-3';
+          migrated = true;
+        }
+      } else if (idNum >= 12 && idNum <= 22) {
+        if (k.waliKelasId !== 'usr-5') {
+          k.waliKelasId = 'usr-5';
+          migrated = true;
+        }
+      } else if (idNum >= 23 && idNum <= 33) {
+        if (k.waliKelasId !== 'usr-3') {
+          k.waliKelasId = 'usr-3';
+          migrated = true;
+        }
+      }
+    }
+
+    return k;
+  }).filter(Boolean);
+
+  // Now, deduplicate classes based on their normalized namaKelas
+  // We want to make sure we keep only one class per name, prioritizing standard id "kl-X"
+  const seenClassNames = new Set<string>();
+  const uniqueClasses: any[] = [];
+
+  // Sort them so that standard IDs ('kl-1' through 'kl-33') come first, ensuring they are preserved as the primary objects
+  const sortedClasses = [...parsed.kelas].sort((a: any, b: any) => {
+    const isAStandard = a && a.id && a.id.startsWith('kl-');
+    const isBStandard = b && b.id && b.id.startsWith('kl-');
+    if (isAStandard && !isBStandard) return -1;
+    if (!isAStandard && isBStandard) return 1;
+    return 0;
+  });
+
+  sortedClasses.forEach((k: any) => {
+    if (!k) return;
+    const name = k.namaKelas;
+    
+    // Determine the target ID for this class name
+    const standardId = standardKelasMap[name] || k.id;
+
+    if (seenClassNames.has(name)) {
+      // It's a duplicate! Redirect its ID to the first one seen (or its standard ID)
+      const primaryClass = uniqueClasses.find((uc: any) => uc.namaKelas === name);
+      const targetId = primaryClass ? primaryClass.id : standardId;
+      if (k.id !== targetId) {
+        redirectKelasIdMap[k.id] = targetId;
         migrated = true;
       }
-    } else if (idNum >= 12 && idNum <= 22) {
-      if (k.waliKelasId !== 'usr-5') {
-        k.waliKelasId = 'usr-5';
+    } else {
+      // First time we see this class name!
+      // If its current ID is not standard but we have a standard ID for it, redirect it to standard ID
+      if (k.id !== standardId && !parsed.kelas.some((x: any) => x && x.id === standardId)) {
+        // Only redirect if the standard ID isn't already taken by something else
+        redirectKelasIdMap[k.id] = standardId;
+        k.id = standardId;
         migrated = true;
       }
-    } else if (idNum >= 23 && idNum <= 33) {
-      if (k.waliKelasId !== 'usr-3') {
-        k.waliKelasId = 'usr-3';
+      seenClassNames.add(name);
+      uniqueClasses.push(k);
+    }
+  });
+
+  parsed.kelas = uniqueClasses;
+
+  // Update students' kelasId if they match a redirect mapping, or if we need to clean them
+  parsed.siswa = parsed.siswa.map((s: any) => {
+    if (!s) return s;
+    
+    // 1. Check if student's kelasId needs redirecting
+    if (s.kelasId && redirectKelasIdMap[s.kelasId]) {
+      s.kelasId = redirectKelasIdMap[s.kelasId];
+      migrated = true;
+    }
+    
+    // 2. Also handle if the student's kelasId is a raw name string instead of an ID (some Google Sheets sync can return name string)
+    if (s.kelasId && !s.kelasId.startsWith('kl-')) {
+      const cleanName = String(s.kelasId).trim()
+        .replace(/^Jam /i, '')
+        .replace(/^Kelas /i, '');
+      const standardId = standardKelasMap[cleanName];
+      if (standardId) {
+        s.kelasId = standardId;
         migrated = true;
       }
     }
-    return k;
+    
+    return s;
   });
 
   // Update guruPelapor in violations
@@ -662,7 +756,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized_v3 = true;
+  parsed._sanitized_v4 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 
