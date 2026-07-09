@@ -136,6 +136,15 @@ export default function SiswaView({
       if (mySiswa) setViewingSiswa(mySiswa);
     }
   }, [currentUser.id, db.siswa, isStudent]);
+
+  useEffect(() => {
+    if (viewingSiswa) {
+      const updated = db.siswa.find(s => s.id === viewingSiswa.id);
+      if (updated && JSON.stringify(updated) !== JSON.stringify(viewingSiswa)) {
+        setViewingSiswa(updated);
+      }
+    }
+  }, [db.siswa]);
   const [activeDetailTab, setActiveDetailTab] = useState<string>(preSelectedSubTab || 'bio');
   
   // CRUD Form State
@@ -741,8 +750,7 @@ export default function SiswaView({
     if (success) {
       setIsEditorOpen(false);
       // Keep the updated student data active on the screen
-      const updatedSiswa = db.siswa.find(s => s.id === sPack.id) || sPack;
-      setViewingSiswa(updatedSiswa);
+      setViewingSiswa(sPack);
     }
   };
 

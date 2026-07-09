@@ -26,9 +26,10 @@ import {
 
 // Sub views
 import { DatabaseState, User, UserRole, Siswa, OrangTua, Kesehatan, Ekonomi, Psikologi, Sosial, Akademik, Konseling, Pelanggaran, RemisiPoin, Prestasi, Asesmen, HomeVisit, Surat, Dokumen } from './types';
-import { apiService } from './services/api';
+import { apiService, WALI_KELAS_USERS } from './services/api';
 import DashboardView from './components/DashboardView';
 import SiswaView from './components/SiswaView';
+import WaliKelasView from './components/WaliKelasView';
 import KonselingView from './components/KonselingView';
 import DokumenSuratView from './components/DokumenSuratView';
 import MasterLaporanView from './components/MasterLaporanView';
@@ -65,13 +66,16 @@ export default function App() {
   };
 
   // Navigations routing states
-  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'siswa' | 'layanan' | 'dokumen' | 'master' | 'pengaturan'>(() => {
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'siswa' | 'walikelas' | 'layanan' | 'dokumen' | 'master' | 'pengaturan'>(() => {
     try {
       const saved = localStorage.getItem('hds_current_user');
       if (saved) {
         const u = JSON.parse(saved);
         if (u.role === UserRole.SISWA) {
           return 'siswa';
+        }
+        if (u.role === UserRole.WALI_KELAS) {
+          return 'walikelas';
         }
       }
     } catch {}
@@ -107,6 +111,13 @@ export default function App() {
   useEffect(() => {
     loadDatabase();
   }, []);
+
+  // Enforce Wali Kelas restricted view
+  useEffect(() => {
+    if (currentUser && currentUser.role === UserRole.WALI_KELAS && activeMenu !== 'walikelas') {
+      setActiveMenu('walikelas');
+    }
+  }, [currentUser, activeMenu]);
 
   const loadDatabase = async (checkConnection: boolean = false, localOnly: boolean = false) => {
     // Optimization for fast startup: If not checking connection and not explicitly localOnly,
@@ -265,13 +276,18 @@ export default function App() {
         newSosial.push(sosial);
         newAkademik.push(akademik);
       } else {
-        newSiswa = newSiswa.map(s => s.id === siswa.id ? { ...s, ...siswa } : s);
-        newOrangTua = newOrangTua.map(o => o.id === orangTua.id ? { ...o, ...orangTua } : o);
-        newKesehatan = newKesehatan.map(k => k.id === kesehatan.id ? { ...k, ...kesehatan } : k);
-        newEkonomi = newEkonomi.map(e => e.id === ekonomi.id ? { ...e, ...ekonomi } : e);
-        newPsikologi = newPsikologi.map(p => p.id === psikologi.id ? { ...p, ...psikologi } : p);
-        newSosial = newSosial.map(s => s.id === sosial.id ? { ...s, ...sosial } : s);
-        newAkademik = newAkademik.map(a => a.id === akademik.id ? { ...a, ...akademik } : a);
+        const updateOrInsert = <T extends { id: string }>(arr: T[], item: T): T[] => {
+          return arr.some(x => x.id === item.id)
+            ? arr.map(x => x.id === item.id ? { ...x, ...item } : x)
+            : [...arr, item];
+        };
+        newSiswa = updateOrInsert(newSiswa, siswa);
+        newOrangTua = updateOrInsert(newOrangTua, orangTua);
+        newKesehatan = updateOrInsert(newKesehatan, kesehatan);
+        newEkonomi = updateOrInsert(newEkonomi, ekonomi);
+        newPsikologi = updateOrInsert(newPsikologi, psikologi);
+        newSosial = updateOrInsert(newSosial, sosial);
+        newAkademik = updateOrInsert(newAkademik, akademik);
       }
 
       return {
@@ -466,7 +482,7 @@ export default function App() {
           {/* Navigation Tabs for Admin & Siswa */}
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button
-              onClick={() => { setLoginTab('admin'); setSelectedUsername('gurubk'); setPassword(''); setLoginError(''); }}
+              onClick={() => { setLoginTab('admin'); setSelectedUsername('Jamilah'); setPassword(''); setLoginError(''); }}
               className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 loginTab === 'admin' 
                   ? 'bg-white text-slate-800 shadow-xs' 
@@ -507,32 +523,67 @@ export default function App() {
                   </button>
                   <button 
                     type="button"
-                    onClick={() => { setSelectedUsername('gurubk'); setLoginError(''); }}
+                    onClick={() => { setSelectedUsername('Jamilah'); setLoginError(''); }}
                     className={`p-2 rounded-xl border transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                      selectedUsername === 'gurubk'
+                      ['jamilah', 'arta', 'nanda', 'gurubk'].includes(selectedUsername.toLowerCase())
                         ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm font-bold'
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                     }`}
                   >
-                    <Sparkles size={12} className={selectedUsername === 'gurubk' ? 'text-emerald-600' : 'text-slate-400'} /> Koordinator BK
+                    <Sparkles size={12} className={['jamilah', 'arta', 'nanda', 'gurubk'].includes(selectedUsername.toLowerCase()) ? 'text-emerald-600' : 'text-slate-400'} /> Guru BK
                   </button>
-                  <button 
-                    type="button"
-                    onClick={() => { 
-                      const firstWali = db?.users.find(u => u.role === UserRole.WALI_KELAS);
-                      setSelectedUsername(firstWali ? firstWali.username : 'artapolta'); 
-                      setLoginError(''); 
-                    }}
-                    className={`p-2 rounded-xl border transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                      db?.users.some(u => u.username === selectedUsername && u.role === UserRole.WALI_KELAS) || ['artapolta', 'nandaputri'].includes(selectedUsername)
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm font-bold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    <Sparkles size={12} className={db?.users.some(u => u.username === selectedUsername && u.role === UserRole.WALI_KELAS) ? 'text-emerald-600' : 'text-slate-400'} /> Wali Kelas
-                  </button>
+                  <div className="relative">
+                    <select
+                      value={db?.users.some(u => u.username === selectedUsername && u.role === UserRole.WALI_KELAS) ? selectedUsername : ""}
+                      onChange={(e) => { 
+                        if (e.target.value) {
+                          setSelectedUsername(e.target.value); 
+                          setLoginError(''); 
+                        }
+                      }}
+                      className={`w-full p-2 h-full rounded-xl border transition text-[10px] font-semibold text-center cursor-pointer appearance-none bg-white ${
+                        db?.users.some(u => u.username === selectedUsername && u.role === UserRole.WALI_KELAS)
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm font-bold'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}
+                      style={{ textAlignLast: 'center' }}
+                    >
+                      <option value="" disabled hidden>Wali Kelas ▼</option>
+                      {(db?.users || WALI_KELAS_USERS)
+                        .filter(u => u.role === UserRole.WALI_KELAS && u.username !== 'artapolta' && u.username !== 'nandaputri')
+                        .map(u => (
+                          <option key={u.id} value={u.username}>
+                            {u.nama}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </div>
                 </div>
               </div>
+
+              {/* Specific User Dropdown for Guru BK */}
+              {['jamilah', 'arta', 'nanda', 'gurubk'].includes(selectedUsername.toLowerCase()) && (
+                <div className="space-y-1.5 text-xs">
+                  <label className="block font-semibold text-slate-600">Pilih Nama Guru BK</label>
+                  <select
+                    value={['jamilah', 'arta', 'nanda'].includes(selectedUsername.toLowerCase()) ? selectedUsername : 'Jamilah'}
+                    onChange={(e) => { setSelectedUsername(e.target.value); setLoginError(''); }}
+                    className="p-2.5 bg-white border border-slate-200 rounded-xl w-full text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                  >
+                    <option value="Jamilah">Nur Jamilah Purwaningsih, S.Psi (Jamilah)</option>
+                    <option value="Arta">Arta Polta, S.Pd (Arta)</option>
+                    <option value="Nanda">Nanda Putri Utami, S.Pd (Nanda)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Selected Wali Kelas Confirmation Banner */}
+              {db?.users.some(u => u.username === selectedUsername && u.role === UserRole.WALI_KELAS) && (
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-800 font-medium">
+                  Wali Kelas Terpilih: <strong className="font-bold">{(db?.users || WALI_KELAS_USERS).find(u => u.username === selectedUsername)?.nama}</strong>
+                </div>
+              )}
 
               <div className="space-y-1.5 text-xs">
                 <label className="block font-semibold text-slate-600">Password</label>
@@ -627,6 +678,13 @@ export default function App() {
               >
                 <BookOpen size={16} /> Profil Saya (HDS)
               </button>
+            ) : currentUser.role === UserRole.WALI_KELAS ? (
+              <button 
+                onClick={() => { setActiveMenu('walikelas'); setDeepLinkSiswaId(undefined); }}
+                className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'walikelas' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
+              >
+                <GraduationCap size={16} /> Ruang Wali Kelas
+              </button>
             ) : (
               <>
                 <button 
@@ -640,6 +698,12 @@ export default function App() {
                   className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'siswa' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
                 >
                   <BookOpen size={16} /> Direktori Siswa (HDS)
+                </button>
+                <button 
+                  onClick={() => { setActiveMenu('walikelas'); setDeepLinkSiswaId(undefined); }}
+                  className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'walikelas' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
+                >
+                  <GraduationCap size={16} /> Ruang Wali Kelas
                 </button>
                 <button 
                   onClick={() => { setActiveMenu('layanan'); }}
@@ -702,10 +766,13 @@ export default function App() {
           <div className="absolute top-full left-0 right-0 bg-slate-900 border-b border-slate-800 p-4 flex flex-col gap-2 text-xs font-semibold">
             {currentUser.role === UserRole.SISWA ? (
               <button onClick={() => { setActiveMenu('siswa'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Profil Saya (HDS)</button>
+            ) : currentUser.role === UserRole.WALI_KELAS ? (
+              <button onClick={() => { setActiveMenu('walikelas'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Ruang Wali Kelas</button>
             ) : (
               <>
                 <button onClick={() => { setActiveMenu('dashboard'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Dashboard Evaluasi</button>
                 <button onClick={() => { setActiveMenu('siswa'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Direktori Siswa (HDS)</button>
+                <button onClick={() => { setActiveMenu('walikelas'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Ruang Wali Kelas</button>
                 <button onClick={() => { setActiveMenu('layanan'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Layanan BK & Disiplin</button>
                 <button onClick={() => { setActiveMenu('dokumen'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Arsip & Surat Resmi</button>
                 <button onClick={() => { setActiveMenu('master'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Pelaporan & Master</button>
@@ -826,6 +893,15 @@ export default function App() {
               });
               return true;
             }}
+          />
+        )}
+
+        {/* VIEW 2.5: WALI KELAS */}
+        {activeMenu === 'walikelas' && (
+          <WaliKelasView 
+            db={db}
+            currentUser={currentUser}
+            onNavigateToSiswa={handleNavigateToSiswa}
           />
         )}
 

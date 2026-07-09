@@ -31,6 +31,31 @@ import {
 
 const LOCAL_STORAGE_KEY = 'hds_bk_database_v1';
 
+// List of 21 Wali Kelas requested by user
+export const WALI_KELAS_USERS: User[] = [
+  { id: 'wk-7-1', username: 'damianus', nama: 'Damianus, S.Pd', role: UserRole.WALI_KELAS, email: 'damianus@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-2', username: 'albert', nama: 'Albert Allen, M.A.Ed', role: UserRole.WALI_KELAS, email: 'albert@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-3', username: 'novie', nama: 'Novie Maryadiati, S.E', role: UserRole.WALI_KELAS, email: 'novie@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-4', username: 'ira', nama: 'Ira Riswana Maha, S.Pd', role: UserRole.WALI_KELAS, email: 'ira@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-5', username: 'yulia', nama: 'Yulia Mawarini, S.Pd', role: UserRole.WALI_KELAS, email: 'yulia@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-6', username: 'terra', nama: 'Terra Meira. S. A. S, S.Pd', role: UserRole.WALI_KELAS, email: 'terra@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-7', username: 'lidya', nama: 'Lidya Septi Setyowati, S.Pd', role: UserRole.WALI_KELAS, email: 'lidya@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-1', username: 'sri', nama: 'Sri Lawati, S.Pd', role: UserRole.WALI_KELAS, email: 'sri@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-2', username: 'farah', nama: 'Farah Muthia Zadfa, S.Pd', role: UserRole.WALI_KELAS, email: 'farah@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-3', username: 'eva', nama: 'Eva SYarifatul Maesyaroh, S.Pdi', role: UserRole.WALI_KELAS, email: 'eva@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-4', username: 'nur', nama: 'Nur Sakinah, S.Pd', role: UserRole.WALI_KELAS, email: 'nur@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-5', username: 'selfi', nama: 'Selfi Widiardin, S.Pd', role: UserRole.WALI_KELAS, email: 'selfi@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-6', username: 'gerry', nama: 'Gerry Adinagara, S.Pd', role: UserRole.WALI_KELAS, email: 'gerry@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-7', username: 'ibnu', nama: 'Ibnu, S.Pd', role: UserRole.WALI_KELAS, email: 'ibnu@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-1', username: 'nani', nama: 'Nani Saidah, S.Pd', role: UserRole.WALI_KELAS, email: 'nani@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-2', username: 'ana', nama: 'A. A. Ana Dian Kahayani, M.Pd', role: UserRole.WALI_KELAS, email: 'ana@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-3', username: 'monica', nama: 'Monica Herlina, S.Pdi', role: UserRole.WALI_KELAS, email: 'monica@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-4', username: 'indri', nama: 'Indri Purnamasari Yusuf, S.Pd', role: UserRole.WALI_KELAS, email: 'indri@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-5', username: 'wahyunis', nama: 'Wahyunis Argowati, S.Pd', role: UserRole.WALI_KELAS, email: 'wahyunis@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-6', username: 'titin', nama: 'Titin Octa Rahma, S.Pd', role: UserRole.WALI_KELAS, email: 'titin@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-7', username: 'ifah', nama: 'Ifah Siti Latifah. A. K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true }
+];
+
 // Seed data to make the dashboard charts and widgets look spectacular and complete right away
 const INITIAL_DATABASE: DatabaseState = {
   config: {
@@ -39,10 +64,13 @@ const INITIAL_DATABASE: DatabaseState = {
   },
   users: [
     { id: 'usr-1', username: 'admin', nama: 'Holfi Aulia, S.Pd', role: UserRole.ADMIN, email: 'holfi.aulia@sekolah.sch.id', isActive: true },
-    { id: 'usr-2', username: 'gurubk', nama: 'Nur Jamilah Purwaningsih, S.Psi', role: UserRole.GURU_BK, email: 'nurjamilah.bk@sekolah.sch.id', isActive: true },
+    { id: 'usr-2', username: 'Jamilah', nama: 'Nur Jamilah Purwaningsih, S.Psi', role: UserRole.GURU_BK, email: 'nurjamilah.bk@sekolah.sch.id', isActive: true },
+    { id: 'usr-3-bk', username: 'Arta', nama: 'Arta Polta, S.Pd', role: UserRole.GURU_BK, email: 'artapolta.bk@sekolah.sch.id', isActive: true },
+    { id: 'usr-5-bk', username: 'Nanda', nama: 'Nanda Putri Utami, S.Pd', role: UserRole.GURU_BK, email: 'nandaputri.bk@sekolah.sch.id', isActive: true },
     { id: 'usr-3', username: 'artapolta', nama: 'Arta Polta, S.Pd', role: UserRole.WALI_KELAS, email: 'artapolta@sekolah.sch.id', isActive: true },
     { id: 'usr-4', username: 'kepsek', nama: 'Salim, S.Pd., M.Hum.', role: UserRole.KEPALA_SEKOLAH, email: 'salim.kepsek@sekolah.sch.id', isActive: true },
     { id: 'usr-5', username: 'nandaputri', nama: 'Nanda Putri Utami, S.Pd', role: UserRole.WALI_KELAS, email: 'nandaputri@sekolah.sch.id', isActive: true },
+    ...WALI_KELAS_USERS
   ],
   tahunPelajaran: [
     { id: 'tp-1', tahun: '2025/2026', semester: 'Ganjil', isActive: true },
@@ -346,7 +374,7 @@ const INITIAL_DATABASE: DatabaseState = {
   ],
   logAktivitas: [
     { id: 'log-1', timestamp: '2026-06-28T09:00:00Z', userId: 'usr-1', namaUser: 'Holfi Aulia, S.Pd', role: 'Admin', aktivitas: 'Login', detail: 'Berhasil masuk ke dalam sistem.' },
-    { id: 'log-2', timestamp: '2026-06-28T09:15:00Z', userId: 'usr-2', namaUser: 'Nur Jamilah Purwaningsih, S.Psi', role: 'Koordinator BK', aktivitas: 'Tambah Konseling', detail: 'Membuat rekaman konseling individu untuk Candra Wijaya.' },
+    { id: 'log-2', timestamp: '2026-06-28T09:15:00Z', userId: 'usr-2', namaUser: 'Nur Jamilah Purwaningsih, S.Psi', role: 'Guru BK', aktivitas: 'Tambah Konseling', detail: 'Membuat rekaman konseling individu untuk Candra Wijaya.' },
   ],
   kehadiran: [
     { id: 'att-1', siswaId: 'sis-1', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 5, sakit: 0, izin: 0, alfa: 0, keterangan: 'Hadir penuh' },
@@ -401,7 +429,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     }
   });
 
-  // Self-healing: Ensure users array has critical admin/gurubk accounts
+  // Self-healing: Ensure users array has critical admin/Jamilah accounts
   const hasAdmin = parsed.users.some((u: any) => u && u.username && u.username.toString().toLowerCase() === 'admin');
   if (!hasAdmin) {
     parsed.users.push({ 
@@ -415,14 +443,49 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     migrated = true;
   }
 
-  const hasGuruBk = parsed.users.some((u: any) => u && u.username && u.username.toString().toLowerCase() === 'gurubk');
-  if (!hasGuruBk) {
+  const hasJamilah = parsed.users.some((u: any) => u && u.username && u.username.toString().toLowerCase() === 'jamilah');
+  if (!hasJamilah) {
+    const gbkIdx = parsed.users.findIndex((u: any) => u && (u.id === 'usr-2' || u.username?.toString().toLowerCase() === 'gurubk'));
+    if (gbkIdx >= 0) {
+      parsed.users[gbkIdx].id = 'usr-2';
+      parsed.users[gbkIdx].username = 'Jamilah';
+      parsed.users[gbkIdx].role = UserRole.GURU_BK;
+      parsed.users[gbkIdx].nama = 'Nur Jamilah Purwaningsih, S.Psi';
+      parsed.users[gbkIdx].email = 'nurjamilah.bk@sekolah.sch.id';
+    } else {
+      parsed.users.push({ 
+        id: 'usr-2', 
+        username: 'Jamilah', 
+        nama: 'Nur Jamilah Purwaningsih, S.Psi', 
+        role: UserRole.GURU_BK, 
+        email: 'nurjamilah.bk@sekolah.sch.id', 
+        isActive: true 
+      });
+    }
+    migrated = true;
+  }
+
+  const hasArtaBk = parsed.users.some((u: any) => u && u.id === 'usr-3-bk');
+  if (!hasArtaBk) {
     parsed.users.push({ 
-      id: 'usr-2', 
-      username: 'gurubk', 
-      nama: 'Nur Jamilah Purwaningsih, S.Psi', 
+      id: 'usr-3-bk', 
+      username: 'Arta', 
+      nama: 'Arta Polta, S.Pd', 
       role: UserRole.GURU_BK, 
-      email: 'nurjamilah.bk@sekolah.sch.id', 
+      email: 'artapolta.bk@sekolah.sch.id', 
+      isActive: true 
+    });
+    migrated = true;
+  }
+
+  const hasNandaBk = parsed.users.some((u: any) => u && u.id === 'usr-5-bk');
+  if (!hasNandaBk) {
+    parsed.users.push({ 
+      id: 'usr-5-bk', 
+      username: 'Nanda', 
+      nama: 'Nanda Putri Utami, S.Pd', 
+      role: UserRole.GURU_BK, 
+      email: 'nandaputri.bk@sekolah.sch.id', 
       isActive: true 
     });
     migrated = true;
@@ -446,9 +509,9 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       }
     }
     if (u.id === 'usr-2') {
-      if (u.nama !== 'Nur Jamilah Purwaningsih, S.Psi' || u.username !== 'gurubk' || u.role !== UserRole.GURU_BK || u.isActive !== true) {
+      if (u.nama !== 'Nur Jamilah Purwaningsih, S.Psi' || u.username !== 'Jamilah' || u.role !== UserRole.GURU_BK || u.isActive !== true) {
         u.nama = 'Nur Jamilah Purwaningsih, S.Psi';
-        u.username = 'gurubk';
+        u.username = 'Jamilah';
         u.role = UserRole.GURU_BK;
         u.email = 'nurjamilah.bk@sekolah.sch.id';
         u.isActive = true;
@@ -461,7 +524,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       if (normalizedUser === 'gurubk' || normalizedName.includes('sulaiman') || normalizedName.includes('siti rahma')) {
         u.nama = 'Nur Jamilah Purwaningsih, S.Psi';
         u.role = UserRole.GURU_BK;
-        u.username = 'gurubk';
+        u.username = 'Jamilah';
         u.email = 'nurjamilah.bk@sekolah.sch.id';
         migrated = true;
       }
@@ -511,6 +574,15 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     migrated = true;
   }
 
+  // Ensure all 21 Wali Kelas are present
+  WALI_KELAS_USERS.forEach((wku) => {
+    const exists = parsed.users.some((u: any) => u && u.username === wku.username);
+    if (!exists) {
+      parsed.users.push(wku);
+      migrated = true;
+    }
+  });
+
   // Update log activities with old BK/Admin names and Kepala Sekolah
   parsed.logAktivitas = parsed.logAktivitas.map((l: any) => {
     if (!l) return l;
@@ -527,7 +599,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       normUser.includes('siti rahma')
     ) {
       l.namaUser = 'Nur Jamilah Purwaningsih, S.Psi';
-      l.role = 'Koordinator BK';
+      l.role = 'Guru BK';
       migrated = true;
     }
     if (l.namaUser === 'Budi Santoso, S.Kom.') {
@@ -670,20 +742,41 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     // Assign appropriate wali kelas
     const idNum = parseInt(k.id.replace('kl-', ''), 10);
     if (!isNaN(idNum)) {
-      if (idNum >= 1 && idNum <= 11) {
-        if (k.waliKelasId !== 'usr-3') {
-          k.waliKelasId = 'usr-3';
+      if (idNum >= 1 && idNum <= 7) {
+        const expectedId = `wk-7-${idNum}`;
+        if (k.waliKelasId !== expectedId) {
+          k.waliKelasId = expectedId;
           migrated = true;
         }
-      } else if (idNum >= 12 && idNum <= 22) {
-        if (k.waliKelasId !== 'usr-5') {
-          k.waliKelasId = 'usr-5';
+      } else if (idNum >= 12 && idNum <= 18) {
+        const expectedId = `wk-8-${idNum - 11}`;
+        if (k.waliKelasId !== expectedId) {
+          k.waliKelasId = expectedId;
           migrated = true;
         }
-      } else if (idNum >= 23 && idNum <= 33) {
-        if (k.waliKelasId !== 'usr-3') {
-          k.waliKelasId = 'usr-3';
+      } else if (idNum >= 23 && idNum <= 29) {
+        const expectedId = `wk-9-${idNum - 22}`;
+        if (k.waliKelasId !== expectedId) {
+          k.waliKelasId = expectedId;
           migrated = true;
+        }
+      } else {
+        // Fallback for classes 8-11
+        if (idNum >= 8 && idNum <= 11) {
+          if (k.waliKelasId !== 'wk-7-7') {
+            k.waliKelasId = 'wk-7-7';
+            migrated = true;
+          }
+        } else if (idNum >= 19 && idNum <= 22) {
+          if (k.waliKelasId !== 'wk-8-7') {
+            k.waliKelasId = 'wk-8-7';
+            migrated = true;
+          }
+        } else if (idNum >= 30 && idNum <= 33) {
+          if (k.waliKelasId !== 'wk-9-7') {
+            k.waliKelasId = 'wk-9-7';
+            migrated = true;
+          }
         }
       }
     }
@@ -1053,15 +1146,60 @@ export const apiService = {
       
       const roleStr = (user.role || '').toString().toLowerCase();
       const isAdmin = roleStr === 'admin' || roleStr === UserRole.ADMIN.toLowerCase();
-      const isGuruBk = roleStr === 'gurubk' || roleStr === 'koordinator bk' || roleStr === UserRole.GURU_BK.toLowerCase();
+      const isGuruBk = roleStr === 'gurubk' || roleStr === 'koordinator bk' || roleStr === 'guru bk' || roleStr === UserRole.GURU_BK.toLowerCase();
 
       if (isAdmin) {
         if (password !== 'admin123') {
           return { success: false, message: 'Password Admin salah.' };
         }
       } else if (isGuruBk) {
-        if (password !== 'bk123') {
-          return { success: false, message: 'Password Koordinator BK salah.' };
+        const uNameLower = (user.username || '').toString().toLowerCase();
+        if (uNameLower === 'jamilah' || uNameLower === 'gurubk') {
+          if (password !== 'Nur123') {
+            return { success: false, message: 'Password Guru BK Jamilah salah.' };
+          }
+        } else if (uNameLower === 'arta') {
+          if (password !== 'Arta123') {
+            return { success: false, message: 'Password Guru BK Arta salah.' };
+          }
+        } else if (uNameLower === 'nanda') {
+          if (password !== 'Putri123') {
+            return { success: false, message: 'Password Guru BK Nanda salah.' };
+          }
+        } else {
+          // fallback
+          if (password !== 'bk123') {
+            return { success: false, message: 'Password Guru BK salah.' };
+          }
+        }
+      } else if (roleStr === UserRole.WALI_KELAS.toLowerCase() || roleStr === 'wali kelas') {
+        const uNameLower = (user.username || '').toString().toLowerCase();
+        const wkPasswords: Record<string, string> = {
+          damianus: 'damianus123',
+          albert: 'albert123',
+          novie: 'novie123',
+          ira: 'ira123',
+          yulia: 'yulia123',
+          terra: 'terra123',
+          lidya: 'lidya123',
+          sri: 'sri123',
+          farah: 'farah123',
+          eva: 'eva123',
+          nur: 'nur123',
+          selfi: 'selfi123',
+          gerry: 'gerry123',
+          ibnu: 'ibnu123',
+          nani: 'nani123',
+          ana: 'ana123',
+          monica: 'monica123',
+          indri: 'indri123',
+          wahyunis: 'wahyunis123',
+          titin: 'titin123',
+          ifah: 'ifah123'
+        };
+        const expectedPassword = wkPasswords[uNameLower] || '123';
+        if (password !== expectedPassword) {
+          return { success: false, message: `Password Wali Kelas ${user.nama} salah.` };
         }
       } else {
         // Fallback for any other user role
@@ -1204,13 +1342,18 @@ export const apiService = {
         db.akademik = db.akademik.map(a => a.id === akademikData.id ? akademikData : a);
       }
     } else {
-      db.siswa = db.siswa.map(s => s.id === siswaData.id ? siswaData : s);
-      db.orangTua = db.orangTua.map(o => o.id === orangTuaData.id ? orangTuaData : o);
-      db.kesehatan = db.kesehatan.map(k => k.id === kesehatanData.id ? kesehatanData : k);
-      db.ekonomi = db.ekonomi.map(e => e.id === ekonomiData.id ? ekonomiData : e);
-      db.psikologi = db.psikologi.map(p => p.id === psikologiData.id ? psikologiData : p);
-      db.sosial = db.sosial.map(s => s.id === sosialData.id ? sosialData : s);
-      db.akademik = db.akademik.map(a => a.id === akademikData.id ? akademikData : a);
+      const updateOrInsert = <T extends { id: string }>(arr: T[], item: T): T[] => {
+        return arr.some(x => x.id === item.id)
+          ? arr.map(x => x.id === item.id ? item : x)
+          : [...arr, item];
+      };
+      db.siswa = updateOrInsert(db.siswa, siswaData);
+      db.orangTua = updateOrInsert(db.orangTua, orangTuaData);
+      db.kesehatan = updateOrInsert(db.kesehatan, kesehatanData);
+      db.ekonomi = updateOrInsert(db.ekonomi, ekonomiData);
+      db.psikologi = updateOrInsert(db.psikologi, psikologiData);
+      db.sosial = updateOrInsert(db.sosial, sosialData);
+      db.akademik = updateOrInsert(db.akademik, akademikData);
     }
 
     saveLocalDatabase(db);
@@ -1323,7 +1466,7 @@ export const apiService = {
     return { success: true, message: 'Kelas berhasil dihapus.' };
   },
 
-  // 5. USER CRUD (Koordinator BK / Users)
+  // 5. USER CRUD (Guru BK / Users)
   saveUser: async (user: User, isNew: boolean): Promise<{ success: boolean; message: string }> => {
     const db = loadLocalDatabase();
     if (isNew) {

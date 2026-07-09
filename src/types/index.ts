@@ -5,7 +5,7 @@
 
 export enum UserRole {
   ADMIN = 'Admin',
-  GURU_BK = 'Koordinator BK',
+  GURU_BK = 'Guru BK',
   WALI_KELAS = 'Wali Kelas',
   KEPALA_SEKOLAH = 'Kepala Sekolah',
   SISWA = 'Siswa',

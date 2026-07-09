@@ -567,7 +567,7 @@ export default function KonselingView({
         </div>
 
         <div class="preamble">
-          Yang bertanda tangan di bawah ini, Koordinator bimbingan konseling dan ketertiban siswa UPTD SMPN 22 Kota Tangerang Selatan menerangkan bahwasanya siswa tersebut di bawah ini telah tercatat dalam sistem poin pembinaan kedisiplinan dan pengurangan remisi:
+          Yang bertanda tangan di bawah ini, Guru bimbingan konseling dan ketertiban siswa UPTD SMPN 22 Kota Tangerang Selatan menerangkan bahwasanya siswa tersebut di bawah ini telah tercatat dalam sistem poin pembinaan kedisiplinan dan pengurangan remisi:
         </div>
 
         <table class="data-table">
@@ -656,7 +656,7 @@ export default function KonselingView({
           <tr>
             <td>
               <div>Mengetahui,</div>
-              <div>Koordinator Bimbingan Konseling</div>
+              <div>Guru Bimbingan Konseling</div>
               <div class="sig-space"></div>
               <div class="sig-name">......................................................</div>
               <div class="sig-nip">NIP. ......................................................</div>
@@ -1353,7 +1353,7 @@ export default function KonselingView({
                     <textarea rows={2} value={formKonseling.permasalahan || ''} onChange={(e) => setFormKonseling(prev => ({ ...prev, permasalahan: e.target.value }))} className="p-2.5 border border-slate-200 rounded-xl w-full" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Analisis Koordinator BK</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Analisis Guru BK</label>
                     <textarea rows={2} value={formKonseling.analisis || ''} onChange={(e) => setFormKonseling(prev => ({ ...prev, analisis: e.target.value }))} className="p-2.5 border border-slate-200 rounded-xl w-full" />
                   </div>
                   <div>
@@ -1756,7 +1756,7 @@ export default function KonselingView({
 
             {/* Preamble */}
             <p className="text-xs text-slate-700 leading-relaxed mb-4">
-              Yang bertanda tangan di bawah ini, Koordinator bimbingan konseling dan ketertiban siswa UPTD SMPN 22 Kota Tangerang Selatan menerangkan bahwasanya siswa tersebut di bawah ini telah tercatat dalam sistem poin pembinaan kedisiplinan dan pengurangan remisi:
+              Yang bertanda tangan di bawah ini, Guru bimbingan konseling dan ketertiban siswa UPTD SMPN 22 Kota Tangerang Selatan menerangkan bahwasanya siswa tersebut di bawah ini telah tercatat dalam sistem poin pembinaan kedisiplinan dan pengurangan remisi:
             </p>
 
             {/* Siswa Data Table */}
@@ -1876,7 +1876,7 @@ export default function KonselingView({
                 <p className="text-[10px] text-slate-400 mt-1">Nama Jelas & Ttd</p>
               </div>
               <div>
-                <p className="text-slate-400 mb-14">Koordinator Bimbingan Konseling</p>
+                <p className="text-slate-400 mb-14">Guru Bimbingan Konseling</p>
                 <p className="font-bold text-slate-800 underline">{currentUser.nama}</p>
                 <p className="text-[10px] text-slate-400">NIP. 19850325 201101 2 003</p>
               </div>

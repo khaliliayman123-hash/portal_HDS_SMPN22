@@ -264,6 +264,7 @@ export default function DashboardView({ db, currentUser, onNavigateToSiswa }: Da
             </div>
           </div>
 
+
           {/* Quick Stats Grid: Counseling Layout Services */}
           <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
             <h3 className="font-bold text-slate-800 flex items-center gap-2">
