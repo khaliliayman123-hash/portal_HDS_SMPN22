@@ -23,7 +23,8 @@ import {
   FileText,
   Calculator,
   TrendingDown,
-  FileDown
+  FileDown,
+  Bell
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { 
@@ -58,7 +59,29 @@ interface KonselingViewProps {
   onDeleteKehadiran?: (id: string) => Promise<boolean>;
 }
 
-type CounselingSubTab = 'konseling' | 'pelanggaran' | 'remisi' | 'prestasi' | 'asesmen' | 'homevisit' | 'kehadiran';
+export type CounselingSubTab = 'konseling' | 'pelanggaran' | 'remisi' | 'prestasi' | 'asesmen' | 'homevisit' | 'kehadiran' | 'pelaporan';
+
+interface KonselingViewProps {
+  db: DatabaseState;
+  currentUser: AppUser;
+  onSaveKonseling: (k: Konseling, isNew: boolean) => Promise<boolean>;
+  onDeleteKonseling: (id: string) => Promise<boolean>;
+  onSavePelanggaran: (p: Pelanggaran, isNew: boolean) => Promise<boolean>;
+  onDeletePelanggaran: (id: string) => Promise<boolean>;
+  onSaveRemisiPoin: (r: RemisiPoin, isNew: boolean) => Promise<boolean>;
+  onDeleteRemisiPoin: (id: string) => Promise<boolean>;
+  onSavePrestasi: (p: Prestasi, isNew: boolean) => Promise<boolean>;
+  onDeletePrestasi: (id: string) => Promise<boolean>;
+  onSaveAsesmen: (a: Asesmen, isNew: boolean) => Promise<boolean>;
+  onDeleteAsesmen: (id: string) => Promise<boolean>;
+  onSaveHomeVisit: (h: HomeVisit, isNew: boolean) => Promise<boolean>;
+  onDeleteHomeVisit: (id: string) => Promise<boolean>;
+  onSaveKehadiran?: (k: Kehadiran, isNew: boolean) => Promise<boolean>;
+  onDeleteKehadiran?: (id: string) => Promise<boolean>;
+  activeTab?: CounselingSubTab;
+  onTabChange?: (tab: CounselingSubTab) => void;
+  onDeletePelaporan?: (id: string) => Promise<boolean>;
+}
 
 export default function KonselingView({
   db,
@@ -76,13 +99,26 @@ export default function KonselingView({
   onSaveHomeVisit,
   onDeleteHomeVisit,
   onSaveKehadiran,
-  onDeleteKehadiran
+  onDeleteKehadiran,
+  activeTab: externalActiveTab,
+  onTabChange,
+  onDeletePelaporan
 }: KonselingViewProps) {
 
   const canModify = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.GURU_BK;
 
   // Tabs routing state
-  const [activeTab, setActiveTab] = useState<CounselingSubTab>('konseling');
+  const [localActiveTab, setLocalActiveTab] = useState<CounselingSubTab>('konseling');
+  
+  const activeTab = externalActiveTab || localActiveTab;
+  const setActiveTab = (tab: CounselingSubTab) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    } else {
+      setLocalActiveTab(tab);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // State for Remisi and Poin summary dashboard
@@ -242,6 +278,7 @@ export default function KonselingView({
       else if (activeTab === 'asesmen') await onDeleteAsesmen(id);
       else if (activeTab === 'homevisit') await onDeleteHomeVisit(id);
       else if (activeTab === 'kehadiran' && onDeleteKehadiran) await onDeleteKehadiran(id);
+      else if (activeTab === 'pelaporan' && onDeletePelaporan) await onDeletePelaporan(id);
     } catch (e) {
       console.error(e);
     } finally {
@@ -255,16 +292,16 @@ export default function KonselingView({
     const q = searchQuery.toLowerCase();
     
     if (activeTab === 'konseling') {
-      return db.konseling.filter(k => {
-        const siswa = db.siswa.find(s => s.id === k.siswaId);
+      return (db.konseling || []).filter(k => {
+        const siswa = (db.siswa || []).find(s => s.id === k.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const nomorKonseling = String(k.nomorKonseling || '').toLowerCase();
         const permasalahan = String(k.permasalahan || '').toLowerCase();
         return (siswaNama.includes(q) || nomorKonseling.includes(q) || permasalahan.includes(q));
       });
     } else if (activeTab === 'pelanggaran') {
-      return db.pelanggaran.filter(p => {
-        const siswa = db.siswa.find(s => s.id === p.siswaId);
+      return (db.pelanggaran || []).filter(p => {
+        const siswa = (db.siswa || []).find(s => s.id === p.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const jenisPelanggaran = String(p.jenisPelanggaran || '').toLowerCase();
         const kategori = String(p.kategori || '').toLowerCase();
@@ -272,31 +309,31 @@ export default function KonselingView({
       });
     } else if (activeTab === 'remisi') {
       return (db.remisiPoin || []).filter(r => {
-        const siswa = db.siswa.find(s => s.id === r.siswaId);
+        const siswa = (db.siswa || []).find(s => s.id === r.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const jenisRemisi = String(r.jenisRemisi || '').toLowerCase();
         const kategori = String(r.kategori || '').toLowerCase();
         return (siswaNama.includes(q) || jenisRemisi.includes(q) || kategori.includes(q));
       });
     } else if (activeTab === 'prestasi') {
-      return db.prestasi.filter(p => {
-        const siswa = db.siswa.find(s => s.id === p.siswaId);
+      return (db.prestasi || []).filter(p => {
+        const siswa = (db.siswa || []).find(s => s.id === p.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const namaPrestasi = String(p.namaPrestasi || '').toLowerCase();
         const tingkat = String(p.tingkat || '').toLowerCase();
         return (siswaNama.includes(q) || namaPrestasi.includes(q) || tingkat.includes(q));
       });
     } else if (activeTab === 'asesmen') {
-      return db.asesmen.filter(a => {
-        const siswa = db.siswa.find(s => s.id === a.siswaId);
+      return (db.asesmen || []).filter(a => {
+        const siswa = (db.siswa || []).find(s => s.id === a.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const akpd = String(a.akpd || '').toLowerCase();
         const iq = String(a.iq || '').toLowerCase();
         return (siswaNama.includes(q) || akpd.includes(q) || iq.includes(q));
       });
     } else if (activeTab === 'homevisit') {
-      return db.homeVisit.filter(h => {
-        const siswa = db.siswa.find(s => s.id === h.siswaId);
+      return (db.homeVisit || []).filter(h => {
+        const siswa = (db.siswa || []).find(s => s.id === h.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const tujuan = String(h.tujuan || '').toLowerCase();
         const hasil = String(h.hasil || '').toLowerCase();
@@ -304,12 +341,32 @@ export default function KonselingView({
       });
     } else if (activeTab === 'kehadiran') {
       return (db.kehadiran || []).filter(h => {
-        const siswa = db.siswa.find(s => s.id === h.siswaId);
+        const siswa = (db.siswa || []).find(s => s.id === h.siswaId);
         const siswaNama = String(siswa?.nama || '').toLowerCase();
         const mingguKe = String(h.mingguKe || '').toLowerCase();
         const bulan = String(h.bulan || '').toLowerCase();
         const keterangan = String(h.keterangan || '').toLowerCase();
         return (siswaNama.includes(q) || mingguKe.includes(q) || bulan.includes(q) || keterangan.includes(q));
+      });
+    } else if (activeTab === 'pelaporan') {
+      return (db.pelaporan || []).filter(p => {
+        if (!q.trim()) return true;
+        
+        const kelasIdLower = String(p.kelasId || '').toLowerCase();
+        const laporLower = String(p.lapor || '').toLowerCase();
+        const kronologisLower = String(p.kronologis || '').toLowerCase();
+        const waliKelasNamaLower = String(p.waliKelasNama || '').toLowerCase();
+        
+        if (kelasIdLower.includes(q) || laporLower.includes(q) || kronologisLower.includes(q) || waliKelasNamaLower.includes(q)) {
+          return true;
+        }
+
+        // Search through siswa matching query to see if mentioned in report
+        const matchingSiswa = (db.siswa || []).filter(s => String(s.nama || '').toLowerCase().includes(q));
+        return matchingSiswa.some(s => {
+          const sNameLower = String(s.nama || '').toLowerCase();
+          return sNameLower && (laporLower.includes(sNameLower) || kronologisLower.includes(sNameLower));
+        });
       });
     }
     return [];
@@ -317,10 +374,10 @@ export default function KonselingView({
 
   // Memoized calculations for students who have violations or remissions
   const studentPointSummaries = useMemo(() => {
-    return db.siswa.map(siswa => {
-      const kelas = db.kelas.find(c => c.id === siswa.kelasId || c.namaKelas.toLowerCase().trim() === siswa.kelasId?.toLowerCase().trim());
+    return (db.siswa || []).map(siswa => {
+      const kelas = (db.kelas || []).find(c => c.id === siswa.kelasId || String(c.namaKelas || '').toLowerCase().trim() === String(siswa.kelasId || '').toLowerCase().trim());
       const kelasName = kelas?.namaKelas || siswa.kelasId || 'Kelas Tidak Terdata';
-      const pelanggaranList = db.pelanggaran.filter(p => p.siswaId === siswa.id);
+      const pelanggaranList = (db.pelanggaran || []).filter(p => p.siswaId === siswa.id);
       const totalPelanggaran = pelanggaranList.reduce((sum, p) => sum + (p.poin || 0), 0);
       
       const remisiList = (db.remisiPoin || []).filter(r => r.siswaId === siswa.id);
@@ -739,9 +796,20 @@ export default function KonselingView({
           >
             <FileSpreadsheet size={14} /> Rekap Kehadiran
           </button>
+          <button 
+            onClick={() => { setActiveTab('pelaporan'); setSearchQuery(''); }}
+            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'pelaporan' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+          >
+            <Bell size={14} /> Laporan Wali Kelas
+            {db.pelaporan && db.pelaporan.length > 0 ? (
+              <span className="ml-1 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
+                {db.pelaporan.length}
+              </span>
+            ) : null}
+          </button>
         </div>
 
-        {canModify && (
+        {canModify && activeTab !== 'pelaporan' && (
           <button 
             onClick={() => openEditor(null)}
             className={`text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 transition-all duration-200 ${
@@ -1282,6 +1350,88 @@ export default function KonselingView({
                 )}
               </tbody>
             </table>
+          )}
+
+          {/* G. LAPORAN WALI KELAS LIST */}
+          {activeTab === 'pelaporan' && (
+            <div className="p-4 space-y-4">
+              <div className="bg-indigo-50/60 border border-indigo-100/50 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-3xs">
+                <div className="space-y-1">
+                  <h4 className="font-bold text-indigo-900 text-xs flex items-center gap-1.5">
+                    📢 Ringkasan Laporan Kejadian Kelas Terintegrasi
+                  </h4>
+                  <p className="text-[10px] text-indigo-700 font-medium">
+                    Sinkronisasi laporan real-time dari Wali Kelas 7-1 s.d 7-7, 8-1 s.d 8-7, dan 9-1 s.d 9-7.
+                  </p>
+                </div>
+                <div className="bg-white/90 backdrop-blur-xs border border-indigo-200/50 text-indigo-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shrink-0 flex items-center gap-1.5 shadow-3xs">
+                  ⏳ Durasi Simpan: <span className="text-rose-600 font-black animate-pulse">24 Jam</span> (Auto-Purge)
+                </div>
+              </div>
+
+              {filteredList.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredList.map((report: any) => {
+                    const expiresAt = new Date(new Date(report.createdAt).getTime() + 24 * 60 * 60 * 1000);
+                    const diffMs = expiresAt.getTime() - Date.now();
+                    const hoursRemaining = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+                    const minsRemaining = Math.max(0, Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)));
+                    
+                    return (
+                      <div 
+                        key={report.id} 
+                        className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-indigo-200/50 hover:shadow-xs transition duration-200 flex flex-col justify-between space-y-3 relative shadow-3xs"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-extrabold px-2.5 py-1 rounded-xl border border-indigo-100">
+                              🏫 {report.kelasId}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="bg-rose-50 border border-rose-100 text-rose-700 text-[9px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                ⏱️ {hoursRemaining > 0 ? `${hoursRemaining}j ${minsRemaining}m lagi` : `${minsRemaining}m lagi`}
+                              </span>
+                              {canModify && (
+                                <button 
+                                  onClick={() => handleDelete(report.id)} 
+                                  className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                  title="Hapus Laporan Kejadian"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <h5 className="font-extrabold text-slate-800 text-[11px] leading-snug">
+                              📌 {report.lapor}
+                            </h5>
+                            <p className="text-slate-500 text-[10px] bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 font-medium leading-relaxed whitespace-pre-wrap">
+                              {report.kronologis}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-dashed border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                          <div>
+                            Pelapor: <b className="text-slate-700">{report.waliKelasNama}</b>
+                          </div>
+                          <div className="font-mono text-[9px]">
+                            {report.tanggalKejadian}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/20 text-slate-400">
+                  <p className="text-xs font-black text-slate-600">Tidak Ada Laporan Kejadian Kelas</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Seluruh kelas terpantau aman dan kondusif.</p>
+                </div>
+              )}
+            </div>
           )}
 
         </div>

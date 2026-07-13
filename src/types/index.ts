@@ -260,6 +260,18 @@ export interface Kehadiran {
   keterangan?: string;
 }
 
+export interface Pelaporan {
+  id: string;
+  kelasId: string; // e.g., "Kelas 7-1" to "Kelas 9-7"
+  lapor: string; // format teks
+  tanggalKejadian: string; // format tanggal
+  kronologis: string; // format teks
+  waliKelasId: string;
+  waliKelasNama: string;
+  createdAt: string;
+  isRead?: boolean;
+}
+
 export interface DatabaseState {
   users: User[];
   siswa: Siswa[];
@@ -283,6 +295,7 @@ export interface DatabaseState {
   jurusan: Jurusan[];
   logAktivitas: LogAktivitas[];
   kehadiran?: Kehadiran[];
+  pelaporan?: Pelaporan[];
   _sanitized?: boolean;
   _sanitized_v3?: boolean;
   _sanitized_v4?: boolean;

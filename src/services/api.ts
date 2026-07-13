@@ -27,6 +27,7 @@ import {
   LogAktivitas,
   DatabaseState,
   Kehadiran,
+  Pelaporan,
 } from '../types';
 
 const LOCAL_STORAGE_KEY = 'hds_bk_database_v1';
@@ -47,13 +48,13 @@ export const WALI_KELAS_USERS: User[] = [
   { id: 'wk-8-5', username: 'selfi', nama: 'Selfi Widiardin, S.Pd', role: UserRole.WALI_KELAS, email: 'selfi@sekolah.sch.id', isActive: true },
   { id: 'wk-8-6', username: 'gerry', nama: 'Gerry Adinagara, S.Pd', role: UserRole.WALI_KELAS, email: 'gerry@sekolah.sch.id', isActive: true },
   { id: 'wk-8-7', username: 'ibnu', nama: 'Ibnu, S.Pd', role: UserRole.WALI_KELAS, email: 'ibnu@sekolah.sch.id', isActive: true },
-  { id: 'wk-9-1', username: 'nani', nama: 'Nani Saidah, S.Pd', role: UserRole.WALI_KELAS, email: 'nani@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-1', username: 'ifah', nama: 'Ifah Siti Latifah. A. K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true },
   { id: 'wk-9-2', username: 'ana', nama: 'A. A. Ana Dian Kahayani, M.Pd', role: UserRole.WALI_KELAS, email: 'ana@sekolah.sch.id', isActive: true },
   { id: 'wk-9-3', username: 'monica', nama: 'Monica Herlina, S.Pdi', role: UserRole.WALI_KELAS, email: 'monica@sekolah.sch.id', isActive: true },
   { id: 'wk-9-4', username: 'indri', nama: 'Indri Purnamasari Yusuf, S.Pd', role: UserRole.WALI_KELAS, email: 'indri@sekolah.sch.id', isActive: true },
   { id: 'wk-9-5', username: 'wahyunis', nama: 'Wahyunis Argowati, S.Pd', role: UserRole.WALI_KELAS, email: 'wahyunis@sekolah.sch.id', isActive: true },
   { id: 'wk-9-6', username: 'titin', nama: 'Titin Octa Rahma, S.Pd', role: UserRole.WALI_KELAS, email: 'titin@sekolah.sch.id', isActive: true },
-  { id: 'wk-9-7', username: 'ifah', nama: 'Ifah Siti Latifah. A. K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true }
+  { id: 'wk-9-7', username: 'nani', nama: 'Nani Saidah, S.Pd', role: UserRole.WALI_KELAS, email: 'nani@sekolah.sch.id', isActive: true }
 ];
 
 // Seed data to make the dashboard charts and widgets look spectacular and complete right away
@@ -380,13 +381,14 @@ const INITIAL_DATABASE: DatabaseState = {
     { id: 'att-1', siswaId: 'sis-1', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 5, sakit: 0, izin: 0, alfa: 0, keterangan: 'Hadir penuh' },
     { id: 'att-2', siswaId: 'sis-3', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 4, sakit: 0, izin: 1, alfa: 0, keterangan: 'Izin urusan keluarga' }
   ],
+  pelaporan: [],
 };
 
 // Local cache
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized_v6) {
+  if (parsed && parsed._sanitized_v7) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -419,7 +421,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     'users', 'siswa', 'orangTua', 'akademik', 'kesehatan', 'ekonomi', 
     'psikologi', 'sosial', 'prestasi', 'pelanggaran', 'remisiPoin', 
     'konseling', 'asesmen', 'homeVisit', 'surat', 'dokumen', 
-    'catatanPerkembangan', 'tahunPelajaran', 'kelas', 'jurusan', 'logAktivitas', 'kehadiran'
+    'catatanPerkembangan', 'tahunPelajaran', 'kelas', 'jurusan', 'logAktivitas', 'kehadiran', 'pelaporan'
   ];
 
   listKeys.forEach(key => {
@@ -562,6 +564,19 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     if (u.isActive !== prevActive) {
       migrated = true;
     }
+
+    // Overwrite/sync Wali Kelas properties with hardcoded WALI_KELAS_USERS to handle swaps cleanly
+    const wkuMatch = WALI_KELAS_USERS.find(w => w.id === u.id);
+    if (wkuMatch) {
+      if (u.username !== wkuMatch.username || u.nama !== wkuMatch.nama || u.email !== wkuMatch.email) {
+        u.username = wkuMatch.username;
+        u.nama = wkuMatch.nama;
+        u.email = wkuMatch.email;
+        u.role = wkuMatch.role;
+        migrated = true;
+      }
+    }
+
     return u;
   }).filter(Boolean);
 
@@ -911,32 +926,58 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized_v6 = true;
+  parsed._sanitized_v7 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 
+function cleanExpiredPelaporan(db: DatabaseState): boolean {
+  if (!db.pelaporan || db.pelaporan.length === 0) return false;
+  const now = Date.now();
+  const originalLength = db.pelaporan.length;
+  db.pelaporan = db.pelaporan.filter(p => {
+    if (!p.createdAt) return true;
+    const age = now - new Date(p.createdAt).getTime();
+    return age < 24 * 60 * 60 * 1000; // 24 hours in ms
+  });
+  return db.pelaporan.length !== originalLength;
+}
+
 function loadLocalDatabase(): DatabaseState {
+  let dbToReturn: DatabaseState;
   if (currentDatabase) {
-    return currentDatabase;
-  }
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      const { sanitized, migrated } = sanitizeDatabaseState(parsed);
-      if (migrated) {
+    dbToReturn = currentDatabase;
+  } else {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const { sanitized, migrated } = sanitizeDatabaseState(parsed);
+        if (migrated) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sanitized));
+        }
+        currentDatabase = sanitized;
+        dbToReturn = sanitized;
+      } catch (e) {
+        console.error('Failed to parse local database, resetting to seed data.', e);
+        const { sanitized } = sanitizeDatabaseState(INITIAL_DATABASE);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sanitized));
+        currentDatabase = sanitized;
+        dbToReturn = sanitized;
       }
+    } else {
+      const { sanitized } = sanitizeDatabaseState(INITIAL_DATABASE);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sanitized));
       currentDatabase = sanitized;
-      return sanitized;
-    } catch (e) {
-      console.error('Failed to parse local database, resetting to seed data.', e);
+      dbToReturn = sanitized;
     }
   }
-  const { sanitized } = sanitizeDatabaseState(INITIAL_DATABASE);
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sanitized));
-  currentDatabase = sanitized;
-  return sanitized;
+
+  // Always perform 24h clean up on database read
+  const changed = cleanExpiredPelaporan(dbToReturn);
+  if (changed) {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dbToReturn));
+  }
+  return dbToReturn;
 }
 
 // Initialize currentDatabase immediately to guarantee it is populated
@@ -1728,5 +1769,42 @@ export const apiService = {
     saveLocalDatabase(db);
     if (getGasApiUrl()) await apiCall('deleteKehadiran', { id });
     return { success: true, message: 'Rekap Kehadiran berhasil dihapus.' };
+  },
+
+  // 16. PELAPORAN WALI KELAS CRUD
+  savePelaporan: async (p: Pelaporan, isNew: boolean): Promise<{ success: boolean; message: string }> => {
+    const db = loadLocalDatabase();
+    if (!db.pelaporan) db.pelaporan = [];
+    
+    // Check if report with same ID or identical content already exists to prevent duplicates
+    const exists = db.pelaporan.some(item => 
+      item.id === p.id || (
+        item.kelasId === p.kelasId &&
+        item.lapor === p.lapor &&
+        item.kronologis === p.kronologis &&
+        item.tanggalKejadian === p.tanggalKejadian &&
+        item.waliKelasId === p.waliKelasId
+      )
+    );
+
+    if (exists && isNew) {
+      return { success: true, message: 'Laporan berhasil disimpan.' };
+    }
+
+    if (isNew) {
+      db.pelaporan.push(p);
+    } else {
+      db.pelaporan = db.pelaporan.map(item => item.id === p.id ? p : item);
+    }
+    saveLocalDatabase(db);
+    return { success: true, message: 'Laporan berhasil disimpan.' };
+  },
+
+  deletePelaporan: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const db = loadLocalDatabase();
+    if (!db.pelaporan) db.pelaporan = [];
+    db.pelaporan = db.pelaporan.filter(item => item.id !== id);
+    saveLocalDatabase(db);
+    return { success: true, message: 'Laporan berhasil dihapus.' };
   }
 };

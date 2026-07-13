@@ -21,11 +21,13 @@ import {
   Database,
   ArrowRight,
   BookOpen,
-  CheckCircle2
+  CheckCircle2,
+  Bell,
+  Trash2
 } from 'lucide-react';
 
 // Sub views
-import { DatabaseState, User, UserRole, Siswa, OrangTua, Kesehatan, Ekonomi, Psikologi, Sosial, Akademik, Konseling, Pelanggaran, RemisiPoin, Prestasi, Asesmen, HomeVisit, Surat, Dokumen } from './types';
+import { DatabaseState, User, UserRole, Siswa, OrangTua, Kesehatan, Ekonomi, Psikologi, Sosial, Akademik, Konseling, Pelanggaran, RemisiPoin, Prestasi, Asesmen, HomeVisit, Surat, Dokumen, Pelaporan } from './types';
 import { apiService, WALI_KELAS_USERS } from './services/api';
 import DashboardView from './components/DashboardView';
 import SiswaView from './components/SiswaView';
@@ -56,6 +58,7 @@ export default function App() {
 
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -101,6 +104,7 @@ export default function App() {
   // Settings URL inputs
   const [gasUrlInput, setGasUrlInput] = useState('');
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState('');
+  const [layananActiveTab, setLayananActiveTab] = useState<'konseling' | 'pelanggaran' | 'remisi' | 'prestasi' | 'asesmen' | 'homevisit' | 'kehadiran' | 'pelaporan'>('konseling');
 
   // Connection testing states
   const [connStatus, setConnStatus] = useState<'idle' | 'checking' | 'connected' | 'failed'>('idle');
@@ -654,6 +658,15 @@ export default function App() {
   // B. MAIN APPLICATION LAYOUT (AFTER LOGIN SUCCESS)
   return (
     <div id="app-layout" className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
+      <style>{`
+        @keyframes blink-red {
+          0%, 100% { background-color: rgb(225 29 72); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+          50% { background-color: rgb(244 63 94); box-shadow: 0 0 0 6px rgba(225, 29, 72, 0); }
+        }
+        .animate-blink-red {
+          animation: blink-red 1.2s infinite;
+        }
+      `}</style>
       
       {/* 1. SIDEBAR (DESKTOP) */}
       <aside id="sidebar-panel" className="hidden md:flex flex-col justify-between w-64 bg-slate-900 text-slate-300 p-5 border-r border-slate-800 flex-shrink-0">
@@ -796,6 +809,75 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Real-time Notification Column for Admin and Guru BK */}
+            {(currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.GURU_BK) && (
+              <div className="relative">
+                <button 
+                  id="btn-notif-bell"
+                  onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                  className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl transition relative cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Pemberitahuan Laporan Wali Kelas"
+                >
+                  <Bell size={15} />
+                  {/* Blinking red notification badge if there are reports! */}
+                  {(db?.pelaporan && db.pelaporan.length > 0) ? (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 text-[8px] text-white font-black rounded-full flex items-center justify-center border-2 border-white animate-blink-red">
+                      {db.pelaporan.length}
+                    </span>
+                  ) : null}
+                </button>
+
+                {/* Dropdown panel containing the reports */}
+                {notifDropdownOpen && (
+                  <div 
+                    id="dropdown-notif-panel"
+                    className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in duration-200"
+                  >
+                    <div className="p-3.5 bg-slate-50 border-b border-slate-150/70 flex items-center justify-between">
+                      <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                        📢 Laporan Masuk Wali Kelas
+                      </span>
+                      <span className="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shrink-0">
+                        Real-time
+                      </span>
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                      {(!db?.pelaporan || db.pelaporan.length === 0) ? (
+                        <div className="py-8 text-center text-slate-400">
+                          <p className="text-xs font-bold">Tidak ada laporan baru</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">Semua kejadian kelas terpantau aman.</p>
+                        </div>
+                      ) : (
+                        [...db.pelaporan].reverse().map((report) => (
+                          <div 
+                            key={report.id} 
+                            id={`notif-item-${report.id}`}
+                            className="p-3.5 hover:bg-slate-50/50 transition text-left cursor-pointer"
+                            onClick={() => {
+                              setActiveMenu('layanan');
+                              setLayananActiveTab('pelaporan');
+                              setNotifDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold mb-1">
+                              <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded-md font-extrabold">{report.kelasId}</span>
+                              <span className="font-mono text-[9px]">{report.tanggalKejadian}</span>
+                            </div>
+                            <p className="font-black text-slate-800 text-[11px] mb-0.5 leading-snug">{report.lapor}</p>
+                            <p className="text-slate-500 text-[10px] line-clamp-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 mt-1">{report.kronologis}</p>
+                            <div className="text-[9px] text-slate-400 mt-1.5 text-right font-medium">
+                              Oleh: <b className="text-slate-600">{report.waliKelasNama}</b>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center gap-2.5 text-xs border-r border-slate-200 pr-4">
               <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
                 <UserIcon size={14} />
@@ -902,6 +984,61 @@ export default function App() {
             db={db}
             currentUser={currentUser}
             onNavigateToSiswa={handleNavigateToSiswa}
+            onSavePelaporan={async (p, isNew) => {
+              try {
+                const res = await apiService.savePelaporan(p, isNew);
+                if (res.success) {
+                  setDb(prev => {
+                    if (!prev) return prev;
+                    const pelaporanList = prev.pelaporan ? [...prev.pelaporan] : [];
+                    const exists = pelaporanList.some(item => 
+                      item.id === p.id || (
+                        item.kelasId === p.kelasId &&
+                        item.lapor === p.lapor &&
+                        item.kronologis === p.kronologis &&
+                        item.tanggalKejadian === p.tanggalKejadian &&
+                        item.waliKelasId === p.waliKelasId
+                      )
+                    );
+                    if (exists && isNew) {
+                      return prev;
+                    }
+                    const list = isNew 
+                      ? [...pelaporanList, p] 
+                      : pelaporanList.map(item => item.id === p.id ? p : item);
+                    return { ...prev, pelaporan: list };
+                  });
+                  showToast(res.message, 'success');
+                  return true;
+                } else {
+                  showToast(res.message, 'error');
+                  return false;
+                }
+              } catch (err) {
+                showToast('Gagal menyimpan laporan.', 'error');
+                return false;
+              }
+            }}
+            onDeletePelaporan={async (id) => {
+              try {
+                const res = await apiService.deletePelaporan(id);
+                if (res.success) {
+                  setDb(prev => {
+                    if (!prev) return prev;
+                    const pelaporanList = prev.pelaporan ? [...prev.pelaporan] : [];
+                    return { ...prev, pelaporan: pelaporanList.filter(item => item.id !== id) };
+                  });
+                  showToast(res.message, 'success');
+                  return true;
+                } else {
+                  showToast(res.message, 'error');
+                  return false;
+                }
+              } catch (err) {
+                showToast('Gagal menghapus laporan.', 'error');
+                return false;
+              }
+            }}
           />
         )}
 
@@ -1098,6 +1235,28 @@ export default function App() {
                 showToast('Gagal menghapus data Kehadiran.', 'error');
               });
               return true;
+            }}
+            activeTab={layananActiveTab}
+            onTabChange={setLayananActiveTab}
+            onDeletePelaporan={async (id) => {
+              try {
+                const res = await apiService.deletePelaporan(id);
+                if (res.success) {
+                  setDb(prev => {
+                    if (!prev) return prev;
+                    const pelaporanList = prev.pelaporan ? [...prev.pelaporan] : [];
+                    return { ...prev, pelaporan: pelaporanList.filter(item => item.id !== id) };
+                  });
+                  showToast(res.message, 'success');
+                  return true;
+                } else {
+                  showToast(res.message, 'error');
+                  return false;
+                }
+              } catch (err) {
+                showToast('Gagal menghapus laporan.', 'error');
+                return false;
+              }
             }}
           />
         )}

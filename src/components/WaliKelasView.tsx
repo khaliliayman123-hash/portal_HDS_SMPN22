@@ -25,9 +25,12 @@ import {
   Sparkles,
   Smile,
   AlertCircle,
-  Lock
+  Lock,
+  Plus,
+  Trash2,
+  Megaphone
 } from 'lucide-react';
-import { DatabaseState, User, UserRole, Siswa, OrangTua, Kesehatan, Ekonomi, Psikologi, Sosial, Akademik, Asesmen } from '../types';
+import { DatabaseState, User, UserRole, Siswa, OrangTua, Kesehatan, Ekonomi, Psikologi, Sosial, Akademik, Asesmen, Pelaporan } from '../types';
 
 interface HdsDetailDrawerProps {
   siswa: Siswa;
@@ -336,11 +339,13 @@ interface WaliKelasViewProps {
   db: DatabaseState | null;
   currentUser: User;
   onNavigateToSiswa: (siswaId: string, subTab: string) => void;
+  onSavePelaporan?: (p: Pelaporan, isNew: boolean) => Promise<boolean>;
+  onDeletePelaporan?: (id: string) => Promise<boolean>;
 }
 
 type ClassLevel = '7' | '8' | '9';
 
-export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: WaliKelasViewProps) {
+export default function WaliKelasView({ db, currentUser, onNavigateToSiswa, onSavePelaporan, onDeletePelaporan }: WaliKelasViewProps) {
   // Allowed class lookup for each Wali Kelas
   const allowedClassName = useMemo(() => {
     if (currentUser.role !== UserRole.WALI_KELAS) return null;
@@ -362,13 +367,13 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
       selfi: 'Kelas 8-5',
       gerry: 'Kelas 8-6',
       ibnu: 'Kelas 8-7',
-      nani: 'Kelas 9-1',
+      nani: 'Kelas 9-7',
       ana: 'Kelas 9-2',
       monica: 'Kelas 9-3',
       indri: 'Kelas 9-4',
       wahyunis: 'Kelas 9-5',
       titin: 'Kelas 9-6',
-      ifah: 'Kelas 9-7'
+      ifah: 'Kelas 9-1'
     };
     
     return mapping[username] || null;
@@ -425,7 +430,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
     if (currentUser.role === UserRole.WALI_KELAS) {
       const username = (currentUser.username || '').toLowerCase();
       const mapping: Record<string, string> = {
-        nani: 'Kelas 9-1', ana: 'Kelas 9-2', monica: 'Kelas 9-3', indri: 'Kelas 9-4', wahyunis: 'Kelas 9-5', titin: 'Kelas 9-6', ifah: 'Kelas 9-7'
+        nani: 'Kelas 9-7', ana: 'Kelas 9-2', monica: 'Kelas 9-3', indri: 'Kelas 9-4', wahyunis: 'Kelas 9-5', titin: 'Kelas 9-6', ifah: 'Kelas 9-1'
       };
       const mappedVal = mapping[username];
       if (mappedVal) return mappedVal;
@@ -440,8 +445,14 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
   const [selectedSiswaId, setSelectedSiswaId] = useState<string | null>(null);
 
   // Integrated sub-feature tabs and chart hover state
-  const [activeSubFeature, setActiveSubFeature] = useState<'hds' | 'kedisiplinan' | 'remisi' | 'rekap_grafik'>('rekap_grafik');
+  const [activeSubFeature, setActiveSubFeature] = useState<'hds' | 'kedisiplinan' | 'remisi' | 'rekap_grafik' | 'pelaporan'>('rekap_grafik');
   const [hoveredBar, setHoveredBar] = useState<{ month: string; value: number; x: number; y: number } | null>(null);
+
+  // States for Pelaporan Form
+  const [lapor, setLapor] = useState('');
+  const [tanggalKejadian, setTanggalKejadian] = useState('');
+  const [kronologis, setKronologis] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine currently selected full class name based on active level
   const currentClassName = useMemo(() => {
@@ -469,6 +480,106 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
       .replace(/ix/g, '9')
       .replace(/[^0-9-]/g, '') // Keep only digits and hyphens (like "7-1")
       .trim();
+  };
+
+  // Filter students belonging to the current selected class
+  const classStudents = useMemo(() => {
+    if (!db || !db.siswa) return [];
+    
+    const targetNorm = normalizeClassName(currentClassName);
+    
+    return db.siswa.filter(s => {
+      const sClassName = getStudentClassName(s);
+      const sNorm = normalizeClassName(sClassName);
+      
+      // Matches if normalized form is identical (e.g., "7-1" === "7-1")
+      return sNorm === targetNorm;
+    });
+  }, [db, currentClassName]);
+
+  // Apply search query filter over class students
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) return classStudents;
+    const q = searchQuery.toLowerCase();
+    return classStudents.filter(s => 
+      String(s.nama || '').toLowerCase().includes(q) || 
+      String(s.nis || '').toLowerCase().includes(q) || 
+      String(s.nisn || '').toLowerCase().includes(q)
+    );
+  }, [classStudents, searchQuery]);
+
+  // Pelaporan memo filters
+  const classPelaporan = useMemo(() => {
+    if (!db || !db.pelaporan) return [];
+    return db.pelaporan.filter(p => normalizeClassName(p.kelasId) === normalizeClassName(currentClassName));
+  }, [db, currentClassName]);
+
+  const filteredPelaporan = useMemo(() => {
+    if (!searchQuery.trim()) return classPelaporan;
+    const q = searchQuery.toLowerCase();
+    
+    return classPelaporan.filter(p => {
+      // 1. Direct match on report text
+      const directMatch = String(p.lapor || '').toLowerCase().includes(q) || 
+                          String(p.kronologis || '').toLowerCase().includes(q) || 
+                          String(p.waliKelasNama || '').toLowerCase().includes(q);
+      if (directMatch) return true;
+      
+      // 2. Match if any student in the class matches the query AND is mentioned in the report
+      const matchingStudents = classStudents.filter(s => String(s.nama || '').toLowerCase().includes(q));
+      const mentionsStudent = matchingStudents.some(s => {
+        const studentNameLower = String(s.nama || '').toLowerCase();
+        return studentNameLower && (
+          String(p.lapor || '').toLowerCase().includes(studentNameLower) || 
+          String(p.kronologis || '').toLowerCase().includes(studentNameLower)
+        );
+      });
+      
+      return mentionsStudent;
+    });
+  }, [classPelaporan, searchQuery, classStudents]);
+
+  // Handlers for Pelaporan
+  const handleAddPelaporan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    if (!lapor.trim() || !tanggalKejadian || !kronologis.trim()) {
+      alert('Harap isi semua kolom laporan!');
+      return;
+    }
+    setIsSubmitting(true);
+    const newReport: Pelaporan = {
+      id: `rep-${Date.now()}`,
+      kelasId: currentClassName,
+      lapor: lapor.trim(),
+      tanggalKejadian,
+      kronologis: kronologis.trim(),
+      waliKelasId: currentUser.id,
+      waliKelasNama: currentUser.nama,
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+
+    try {
+      if (onSavePelaporan) {
+        const success = await onSavePelaporan(newReport, true);
+        if (success) {
+          setLapor('');
+          setTanggalKejadian('');
+          setKronologis('');
+        }
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteReport = async (id: string) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
+      if (onDeletePelaporan) {
+        await onDeletePelaporan(id);
+      }
+    }
   };
 
   // Function to download Student HDS Data and Remisi Poin as Word Doc
@@ -810,32 +921,6 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
     URL.revokeObjectURL(url);
   };
 
-  // Filter students belonging to the current selected class
-  const classStudents = useMemo(() => {
-    if (!db || !db.siswa) return [];
-    
-    const targetNorm = normalizeClassName(currentClassName);
-    
-    return db.siswa.filter(s => {
-      const sClassName = getStudentClassName(s);
-      const sNorm = normalizeClassName(sClassName);
-      
-      // Matches if normalized form is identical (e.g., "7-1" === "7-1")
-      return sNorm === targetNorm;
-    });
-  }, [db, currentClassName]);
-
-  // Apply search query filter over class students
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery.trim()) return classStudents;
-    const q = searchQuery.toLowerCase();
-    return classStudents.filter(s => 
-      s.nama.toLowerCase().includes(q) || 
-      s.nis.toLowerCase().includes(q) || 
-      s.nisn.toLowerCase().includes(q)
-    );
-  }, [classStudents, searchQuery]);
-
   // Filter class violations (Kedisiplinan Tab)
   const classViolations = useMemo(() => {
     if (!db || !db.pelanggaran) return [];
@@ -848,11 +933,14 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
     if (!searchQuery.trim()) return classViolations;
     const q = searchQuery.toLowerCase();
     return classViolations.filter(p => {
-      const student = db?.siswa.find(s => s.id === p.siswaId);
+      const student = (db?.siswa || []).find(s => s.id === p.siswaId);
+      const studentNama = String(student?.nama || '').toLowerCase();
+      const jenisPelanggaran = String(p.jenisPelanggaran || '').toLowerCase();
+      const kategori = String(p.kategori || '').toLowerCase();
       return (
-        (student && student.nama.toLowerCase().includes(q)) ||
-        p.jenisPelanggaran.toLowerCase().includes(q) ||
-        p.kategori.toLowerCase().includes(q)
+        studentNama.includes(q) ||
+        jenisPelanggaran.includes(q) ||
+        kategori.includes(q)
       );
     });
   }, [classViolations, searchQuery, db]);
@@ -869,11 +957,14 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
     if (!searchQuery.trim()) return classRemisi;
     const q = searchQuery.toLowerCase();
     return classRemisi.filter(r => {
-      const student = db?.siswa.find(s => s.id === r.siswaId);
+      const student = (db?.siswa || []).find(s => s.id === r.siswaId);
+      const studentNama = String(student?.nama || '').toLowerCase();
+      const jenisRemisi = String(r.jenisRemisi || '').toLowerCase();
+      const kategori = String(r.kategori || '').toLowerCase();
       return (
-        (student && student.nama.toLowerCase().includes(q)) ||
-        r.jenisRemisi.toLowerCase().includes(q) ||
-        r.kategori.toLowerCase().includes(q)
+        studentNama.includes(q) ||
+        jenisRemisi.includes(q) ||
+        kategori.includes(q)
       );
     });
   }, [classRemisi, searchQuery, db]);
@@ -1184,21 +1275,30 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
           >
             🌱 Log Remisi Poin
           </button>
+          <button
+            onClick={() => { setActiveSubFeature('pelaporan'); setSearchQuery(''); }}
+            className={`flex-1 min-w-[140px] py-2.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+              activeSubFeature === 'pelaporan' ? 'bg-white text-indigo-700 shadow-xs border border-slate-100 font-black' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            📢 Laporan Kejadian Kelas
+          </button>
         </div>
 
         {/* Sub Feature Main Workspace */}
         <div className="space-y-4 pt-2">
           
           {/* SEARCH BAR (For search-applicable tabs) */}
-          {activeSubFeature !== 'rekap_grafik' && (
-            <div className="relative max-w-md">
+          <div className="space-y-2 max-w-md">
+            <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
               <input
+                id="search-input-box"
                 type="text"
-                placeholder={`Cari siswa atau materi di ${currentClassName}...`}
+                placeholder={`Cari nama siswa di ${currentClassName}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:bg-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:bg-white font-medium"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -1206,7 +1306,31 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
                 </button>
               )}
             </div>
-          )}
+
+            {/* Suggestions for students in the class matching the search query */}
+            {searchQuery.trim() && (
+              <div id="student-search-suggestions" className="flex flex-wrap gap-1.5 items-center bg-indigo-50/50 p-2 border border-indigo-100/30 rounded-xl">
+                <span className="text-[10px] text-indigo-700 font-extrabold uppercase tracking-wider shrink-0">Mencocokkan Siswa:</span>
+                {classStudents
+                  .filter(s => String(s.nama || '').toLowerCase().includes(searchQuery.toLowerCase()))
+                  .slice(0, 5) // limit to 5 suggestions
+                  .map(s => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      id={`suggestion-btn-${s.id}`}
+                      onClick={() => setSearchQuery(s.nama)}
+                      className="text-[10px] font-black bg-white hover:bg-indigo-600 hover:text-white border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg transition duration-150 shadow-3xs cursor-pointer flex items-center gap-1"
+                    >
+                      👤 {s.nama}
+                    </button>
+                  ))}
+                {classStudents.filter(s => String(s.nama || '').toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                  <span className="text-[10px] text-slate-400 font-bold italic">Tidak ada nama siswa yang cocok di {currentClassName}</span>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* TAB 1: Himpunan Data Siswa (HDS) - READ ONLY */}
           {activeSubFeature === 'hds' && (
@@ -1434,9 +1558,11 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
                   <p className="text-[10px] text-slate-400 mt-0.5">Daftar rekap skor bersih kedisiplinan dan cetak lembar keterangan resmi (.doc)</p>
                 </div>
 
-                {classStudents.length === 0 ? (
+                {filteredStudents.length === 0 ? (
                   <div className="py-10 text-center text-slate-400 italic text-xs">
-                    Tidak ada siswa di kelas ini.
+                    {classStudents.length === 0 
+                      ? "Tidak ada siswa di kelas ini." 
+                      : "Tidak ada siswa yang cocok dengan pencarian."}
                   </div>
                 ) : (
                   <div className="overflow-x-auto border border-slate-100 rounded-xl">
@@ -1452,7 +1578,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                        {classStudents.map((s) => {
+                        {filteredStudents.map((s) => {
                           let totalPelanggaran = 0;
                           if (db?.pelanggaran) {
                             db.pelanggaran.filter(p => p.siswaId === s.id).forEach(p => { totalPelanggaran += Number(p.poin); });
@@ -1511,6 +1637,138 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa }: Wa
                         })}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB 5: Fitur Pelaporan */}
+          {activeSubFeature === 'pelaporan' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* Form Input */}
+              <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+                <div>
+                  <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <Megaphone size={14} className="text-indigo-600" />
+                    Input Laporan Kejadian Rombel
+                  </h4>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Laporkan kejadian penting atau pelanggaran kelas di {currentClassName}</p>
+                </div>
+
+                <form onSubmit={handleAddPelaporan} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Lapor (Format Teks) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      id="input-lapor-teks"
+                      type="text"
+                      required
+                      placeholder="Contoh: Kejadian keributan antar siswa di kelas"
+                      value={lapor}
+                      onChange={(e) => setLapor(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Tanggal Kejadian <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      id="input-tanggal-kejadian"
+                      type="date"
+                      required
+                      value={tanggalKejadian}
+                      onChange={(e) => setTanggalKejadian(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Kronologis Kejadian (Format Teks) <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea
+                      id="input-kronologis-teks"
+                      required
+                      rows={4}
+                      placeholder="Jelaskan kronologi kejadian secara mendalam..."
+                      value={kronologis}
+                      onChange={(e) => setKronologis(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-xs"
+                    />
+                  </div>
+
+                  <button
+                    id="btn-submit-laporan"
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`w-full py-2.5 text-white font-extrabold rounded-xl transition flex items-center justify-center gap-2 shadow-sm text-xs ${
+                      isSubmitting ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <>Mengirim...</>
+                    ) : (
+                      <>
+                        <Plus size={14} /> Kirim Laporan Kelas
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              {/* History / Report List */}
+              <div className="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+                <div>
+                  <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText size={14} className="text-indigo-600" />
+                    Riwayat Laporan Kejadian - {currentClassName}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Daftar kejadian rombel yang dilaporkan oleh Wali Kelas</p>
+                </div>
+
+                {filteredPelaporan.length === 0 ? (
+                  <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                    <p className="text-xs text-slate-400 font-bold">Belum ada laporan masuk untuk kelas ini</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Gunakan formulir di samping untuk membuat laporan baru.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    {filteredPelaporan.map((report) => (
+                      <div key={report.id} id={`report-card-${report.id}`} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition space-y-2 relative">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <span className="inline-block bg-slate-200/60 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded-full mb-1">
+                              📅 {report.tanggalKejadian}
+                            </span>
+                            <h5 className="font-black text-slate-800 text-xs">{report.lapor}</h5>
+                          </div>
+                          
+                          <button
+                            id={`btn-delete-report-${report.id}`}
+                            onClick={() => handleDeleteReport(report.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="Hapus Laporan"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+
+                        <p className="text-slate-600 text-[11px] leading-relaxed bg-white p-3 rounded-lg border border-slate-100 shadow-3xs whitespace-pre-line">
+                          {report.kronologis}
+                        </p>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
+                          <span>Dilaporkan oleh: <b className="text-slate-600">{report.waliKelasNama}</b></span>
+                          <span className="text-[9px] font-mono">{new Date(report.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
