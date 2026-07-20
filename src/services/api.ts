@@ -42,13 +42,13 @@ export const WALI_KELAS_USERS: User[] = [
   { id: 'wk-7-6', username: 'terra', nama: 'Terra Meira. S. A. S, S.Pd', role: UserRole.WALI_KELAS, email: 'terra@sekolah.sch.id', isActive: true },
   { id: 'wk-7-7', username: 'lidya', nama: 'Lidya Septi Setyowati, S.Pd', role: UserRole.WALI_KELAS, email: 'lidya@sekolah.sch.id', isActive: true },
   { id: 'wk-8-1', username: 'sri', nama: 'Sri Lawati, S.Pd', role: UserRole.WALI_KELAS, email: 'sri@sekolah.sch.id', isActive: true },
-  { id: 'wk-8-2', username: 'farah', nama: 'Farah Muthia Zadfa, S.Pd', role: UserRole.WALI_KELAS, email: 'farah@sekolah.sch.id', isActive: true },
-  { id: 'wk-8-3', username: 'eva', nama: 'Eva SYarifatul Maesyaroh, S.Pdi', role: UserRole.WALI_KELAS, email: 'eva@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-2', username: 'farah', nama: 'Farah Mutia Zadfa, S.Pd', role: UserRole.WALI_KELAS, email: 'farah@sekolah.sch.id', isActive: true },
+  { id: 'wk-8-3', username: 'eva', nama: 'Eva Syarifatul Maesyaroh, S.Pd', role: UserRole.WALI_KELAS, email: 'eva@sekolah.sch.id', isActive: true },
   { id: 'wk-8-4', username: 'nur', nama: 'Nur Sakinah, S.Pd', role: UserRole.WALI_KELAS, email: 'nur@sekolah.sch.id', isActive: true },
   { id: 'wk-8-5', username: 'selfi', nama: 'Selfi Widiardin, S.Pd', role: UserRole.WALI_KELAS, email: 'selfi@sekolah.sch.id', isActive: true },
   { id: 'wk-8-6', username: 'gerry', nama: 'Gerry Adinagara, S.Pd', role: UserRole.WALI_KELAS, email: 'gerry@sekolah.sch.id', isActive: true },
   { id: 'wk-8-7', username: 'ibnu', nama: 'Ibnu, S.Pd', role: UserRole.WALI_KELAS, email: 'ibnu@sekolah.sch.id', isActive: true },
-  { id: 'wk-9-1', username: 'ifah', nama: 'Ifah Siti Latifah. A. K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true },
+  { id: 'wk-9-1', username: 'ifah', nama: 'Ifah Siti Latifah, A.K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true },
   { id: 'wk-9-2', username: 'ana', nama: 'A. A. Ana Dian Kahayani, M.Pd', role: UserRole.WALI_KELAS, email: 'ana@sekolah.sch.id', isActive: true },
   { id: 'wk-9-3', username: 'monica', nama: 'Monica Herlina, S.Pdi', role: UserRole.WALI_KELAS, email: 'monica@sekolah.sch.id', isActive: true },
   { id: 'wk-9-4', username: 'indri', nama: 'Indri Purnamasari Yusuf, S.Pd', role: UserRole.WALI_KELAS, email: 'indri@sekolah.sch.id', isActive: true },
@@ -388,7 +388,7 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized_v7) {
+  if (parsed && parsed._sanitized_v10) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -754,45 +754,36 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       migrated = true;
     }
 
-    // Assign appropriate wali kelas
-    const idNum = parseInt(k.id.replace('kl-', ''), 10);
-    if (!isNaN(idNum)) {
-      if (idNum >= 1 && idNum <= 7) {
-        const expectedId = `wk-7-${idNum}`;
-        if (k.waliKelasId !== expectedId) {
-          k.waliKelasId = expectedId;
-          migrated = true;
+    // Assign appropriate wali kelas based on normalized class name (e.g. "Kelas 8-1" -> wk-8-1)
+    const classMatch = name.match(/Kelas\s+(\d+)-(\d+)/i);
+    if (classMatch) {
+      const level = parseInt(classMatch[1], 10);
+      const rombel = parseInt(classMatch[2], 10);
+      let expectedId = '';
+      
+      if (level === 7) {
+        if (rombel >= 1 && rombel <= 7) {
+          expectedId = `wk-7-${rombel}`;
+        } else {
+          expectedId = 'wk-7-7';
         }
-      } else if (idNum >= 12 && idNum <= 18) {
-        const expectedId = `wk-8-${idNum - 11}`;
-        if (k.waliKelasId !== expectedId) {
-          k.waliKelasId = expectedId;
-          migrated = true;
+      } else if (level === 8) {
+        if (rombel >= 1 && rombel <= 7) {
+          expectedId = `wk-8-${rombel}`;
+        } else {
+          expectedId = 'wk-8-7';
         }
-      } else if (idNum >= 23 && idNum <= 29) {
-        const expectedId = `wk-9-${idNum - 22}`;
-        if (k.waliKelasId !== expectedId) {
-          k.waliKelasId = expectedId;
-          migrated = true;
+      } else if (level === 9) {
+        if (rombel >= 1 && rombel <= 7) {
+          expectedId = `wk-9-${rombel}`;
+        } else {
+          expectedId = 'wk-9-7';
         }
-      } else {
-        // Fallback for classes 8-11
-        if (idNum >= 8 && idNum <= 11) {
-          if (k.waliKelasId !== 'wk-7-7') {
-            k.waliKelasId = 'wk-7-7';
-            migrated = true;
-          }
-        } else if (idNum >= 19 && idNum <= 22) {
-          if (k.waliKelasId !== 'wk-8-7') {
-            k.waliKelasId = 'wk-8-7';
-            migrated = true;
-          }
-        } else if (idNum >= 30 && idNum <= 33) {
-          if (k.waliKelasId !== 'wk-9-7') {
-            k.waliKelasId = 'wk-9-7';
-            migrated = true;
-          }
-        }
+      }
+      
+      if (expectedId && k.waliKelasId !== expectedId) {
+        k.waliKelasId = expectedId;
+        migrated = true;
       }
     }
 
@@ -922,11 +913,29 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       if (s.nis === undefined) { s.nis = ''; migrated = true; }
       if (s.nisn === undefined) { s.nisn = ''; migrated = true; }
       if (!s.nama) { s.nama = 'Siswa Tanpa Nama'; migrated = true; }
+
+      // Normalize gender (jenisKelamin)
+      const currentGender = s.jenisKelamin;
+      const rawGender = String(currentGender || '').trim().toLowerCase();
+      let normalizedGender: 'Laki-laki' | 'Perempuan' = 'Laki-laki';
+      if (rawGender.startsWith('p') || rawGender.includes('perempuan') || rawGender.includes('wanita') || rawGender === 'pr') {
+        normalizedGender = 'Perempuan';
+      } else if (rawGender.startsWith('l') || rawGender.includes('laki') || rawGender === 'lk') {
+        normalizedGender = 'Laki-laki';
+      } else {
+        // Fallback
+        normalizedGender = currentGender === 'Perempuan' ? 'Perempuan' : 'Laki-laki';
+      }
+
+      if (currentGender !== normalizedGender) {
+        s.jenisKelamin = normalizedGender;
+        migrated = true;
+      }
     }
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized_v7 = true;
+  parsed._sanitized_v10 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 
@@ -1357,6 +1366,14 @@ export const apiService = {
     isNew: boolean,
     localOnly: boolean = false
   ): Promise<{ success: boolean; message: string }> => {
+    // Normalize gender
+    const rawGender = String(siswaData.jenisKelamin || '').trim().toLowerCase();
+    if (rawGender.startsWith('p') || rawGender.includes('perempuan') || rawGender.includes('wanita') || rawGender === 'pr') {
+      siswaData.jenisKelamin = 'Perempuan';
+    } else {
+      siswaData.jenisKelamin = 'Laki-laki';
+    }
+
     const db = loadLocalDatabase();
     
     if (isNew) {

@@ -29,7 +29,7 @@ Terdapat aturan khusus terkait pembagian kelas untuk Wali Kelas **Ifah Siti Lati
 ### Tempat Implementasi Aturan Ini (Wajib Dipertahankan):
 1. **`src/services/api.ts` (WALI_KELAS_USERS)**:
    ```typescript
-   { id: 'wk-9-1', username: 'ifah', nama: 'Ifah Siti Latifah. A. K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true },
+   { id: 'wk-9-1', username: 'ifah', nama: 'Ifah Siti Latifah, A.K, S.Pd', role: UserRole.WALI_KELAS, email: 'ifah@sekolah.sch.id', isActive: true },
    ...
    { id: 'wk-9-7', username: 'nani', nama: 'Nani Saidah, S.Pd', role: UserRole.WALI_KELAS, email: 'nani@sekolah.sch.id', isActive: true }
    ```

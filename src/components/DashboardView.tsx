@@ -73,7 +73,7 @@ export default function DashboardView({ db, currentUser, onNavigateToSiswa }: Da
   const genderCounts = db.siswa.reduce(
     (acc, s) => {
       if (s.jenisKelamin === 'Laki-laki') acc.laki++;
-      else acc.perempuan++;
+      else if (s.jenisKelamin === 'Perempuan') acc.perempuan++;
       return acc;
     },
     { laki: 0, perempuan: 0 }

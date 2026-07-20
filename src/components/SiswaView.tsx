@@ -435,7 +435,13 @@ export default function SiswaView({
               nis,
               nisn,
               nama,
-              jenisKelamin: (row[3] === 'Perempuan' ? 'Perempuan' : 'Laki-laki'),
+              jenisKelamin: (() => {
+                const g = String(row[3] || '').trim().toLowerCase();
+                if (g.startsWith('p') || g.includes('perempuan') || g.includes('wanita') || g === 'pr') {
+                  return 'Perempuan';
+                }
+                return 'Laki-laki';
+              })(),
               tempatLahir: row[4] || '-',
               tanggalLahir: row[5] || '2011-01-01',
               agama: row[6] || 'Islam',
