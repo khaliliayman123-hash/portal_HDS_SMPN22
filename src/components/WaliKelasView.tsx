@@ -360,6 +360,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa, onSa
       yulia: 'Kelas 7-5',
       terra: 'Kelas 7-6',
       lidya: 'Kelas 7-7',
+      liyanah: 'Kelas 7-8',
       sri: 'Kelas 8-1',
       farah: 'Kelas 8-2',
       eva: 'Kelas 8-3',
@@ -391,7 +392,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa, onSa
     if (currentUser.role === UserRole.WALI_KELAS) {
       const username = (currentUser.username || '').toLowerCase();
       const mapping: Record<string, string> = {
-        damianus: '7', albert: '7', novie: '7', ira: '7', yulia: '7', terra: '7', lidya: '7',
+        damianus: '7', albert: '7', novie: '7', ira: '7', yulia: '7', terra: '7', lidya: '7', liyanah: '7',
         sri: '8', farah: '8', eva: '8', nur: '8', selfi: '8', gerry: '8', ibnu: '8',
         nani: '9', ana: '9', monica: '9', indri: '9', wahyunis: '9', titin: '9', ifah: '9'
       };
@@ -406,7 +407,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa, onSa
     if (currentUser.role === UserRole.WALI_KELAS) {
       const username = (currentUser.username || '').toLowerCase();
       const mapping: Record<string, string> = {
-        damianus: 'Kelas 7-1', albert: 'Kelas 7-2', novie: 'Kelas 7-3', ira: 'Kelas 7-4', yulia: 'Kelas 7-5', terra: 'Kelas 7-6', lidya: 'Kelas 7-7'
+        damianus: 'Kelas 7-1', albert: 'Kelas 7-2', novie: 'Kelas 7-3', ira: 'Kelas 7-4', yulia: 'Kelas 7-5', terra: 'Kelas 7-6', lidya: 'Kelas 7-7', liyanah: 'Kelas 7-8'
       };
       const mappedVal = mapping[username];
       if (mappedVal) return mappedVal;
@@ -1156,7 +1157,7 @@ export default function WaliKelasView({ db, currentUser, onNavigateToSiswa, onSa
           Pilih Rombongan Belajar Kelas {activeLevel}:
         </div>
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 7 }, (_, i) => `Kelas ${activeLevel}-${i + 1}`).map((cls) => {
+          {Array.from({ length: activeLevel === '7' ? 8 : 7 }, (_, i) => `Kelas ${activeLevel}-${i + 1}`).map((cls) => {
             const isActive = currentClassName === cls;
             const isLocked = allowedClassName !== null && allowedClassName !== cls;
             return (

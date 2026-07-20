@@ -41,6 +41,7 @@ export const WALI_KELAS_USERS: User[] = [
   { id: 'wk-7-5', username: 'yulia', nama: 'Yulia Mawarini, S.Pd', role: UserRole.WALI_KELAS, email: 'yulia@sekolah.sch.id', isActive: true },
   { id: 'wk-7-6', username: 'terra', nama: 'Terra Meira. S. A. S, S.Pd', role: UserRole.WALI_KELAS, email: 'terra@sekolah.sch.id', isActive: true },
   { id: 'wk-7-7', username: 'lidya', nama: 'Lidya Septi Setyowati, S.Pd', role: UserRole.WALI_KELAS, email: 'lidya@sekolah.sch.id', isActive: true },
+  { id: 'wk-7-8', username: 'liyanah', nama: 'Liyanah Astuti, S.Pd', role: UserRole.WALI_KELAS, email: 'liyanah@sekolah.sch.id', isActive: true },
   { id: 'wk-8-1', username: 'sri', nama: 'Sri Lawati, S.Pd', role: UserRole.WALI_KELAS, email: 'sri@sekolah.sch.id', isActive: true },
   { id: 'wk-8-2', username: 'farah', nama: 'Farah Mutia Zadfa, S.Pd', role: UserRole.WALI_KELAS, email: 'farah@sekolah.sch.id', isActive: true },
   { id: 'wk-8-3', username: 'eva', nama: 'Eva Syarifatul Maesyaroh, S.Pd', role: UserRole.WALI_KELAS, email: 'eva@sekolah.sch.id', isActive: true },
@@ -88,7 +89,7 @@ const INITIAL_DATABASE: DatabaseState = {
     { id: 'kl-5', namaKelas: 'Kelas 7-5', waliKelasId: 'usr-3' },
     { id: 'kl-6', namaKelas: 'Kelas 7-6', waliKelasId: 'usr-3' },
     { id: 'kl-7', namaKelas: 'Kelas 7-7', waliKelasId: 'usr-3' },
-    { id: 'kl-8', namaKelas: 'Kelas 7-8', waliKelasId: 'usr-3' },
+    { id: 'kl-8', namaKelas: 'Kelas 7-8', waliKelasId: 'wk-7-8' },
     { id: 'kl-9', namaKelas: 'Kelas 7-9', waliKelasId: 'usr-3' },
     { id: 'kl-10', namaKelas: 'Kelas 7-10', waliKelasId: 'usr-3' },
     { id: 'kl-11', namaKelas: 'Kelas 7-11', waliKelasId: 'usr-3' },
@@ -388,7 +389,7 @@ const INITIAL_DATABASE: DatabaseState = {
 let currentDatabase: DatabaseState | null = null;
 
 export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; migrated: boolean } {
-  if (parsed && parsed._sanitized_v10) {
+  if (parsed && parsed._sanitized_v11) {
     return { sanitized: parsed as DatabaseState, migrated: false };
   }
   let migrated = false;
@@ -762,7 +763,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
       let expectedId = '';
       
       if (level === 7) {
-        if (rombel >= 1 && rombel <= 7) {
+        if (rombel >= 1 && rombel <= 8) {
           expectedId = `wk-7-${rombel}`;
         } else {
           expectedId = 'wk-7-7';
@@ -935,7 +936,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return s;
   }).filter(Boolean);
 
-  parsed._sanitized_v10 = true;
+  parsed._sanitized_v11 = true;
   return { sanitized: parsed as DatabaseState, migrated };
 }
 
@@ -1232,6 +1233,7 @@ export const apiService = {
           yulia: 'yulia123',
           terra: 'terra123',
           lidya: 'lidya123',
+          liyanah: 'liyanah123',
           sri: 'sri123',
           farah: 'farah123',
           eva: 'eva123',
