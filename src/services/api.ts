@@ -1816,6 +1816,7 @@ export const apiService = {
       db.pelaporan = db.pelaporan.map(item => item.id === p.id ? p : item);
     }
     saveLocalDatabase(db);
+    if (getGasApiUrl()) await apiCall('savePelaporan', { p, isNew });
     return { success: true, message: 'Laporan berhasil disimpan.' };
   },
 
@@ -1824,6 +1825,7 @@ export const apiService = {
     if (!db.pelaporan) db.pelaporan = [];
     db.pelaporan = db.pelaporan.filter(item => item.id !== id);
     saveLocalDatabase(db);
+    if (getGasApiUrl()) await apiCall('deletePelaporan', { id });
     return { success: true, message: 'Laporan berhasil dihapus.' };
   }
 };

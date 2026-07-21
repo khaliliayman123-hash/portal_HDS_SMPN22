@@ -88,7 +88,9 @@ function fetchFullDatabase(db) {
     "CatatanPerkembangan": ["id", "siswaId", "tanggal", "catatan", "guruBkId"],
     "TahunPelajaran": ["id", "tahun", "semester", "isActive"],
     "Kelas": ["id", "namaKelas", "waliKelasId"],
-    "LogAktivitas": ["id", "timestamp", "userId", "namaUser", "role", "aktivitas", "detail"]
+    "LogAktivitas": ["id", "timestamp", "userId", "namaUser", "role", "aktivitas", "detail"],
+    "Kehadiran": ["id", "siswaId", "mingguKe", "bulan", "tahun", "hadir", "sakit", "izin", "alfa", "keterangan"],
+    "Pelaporan": ["id", "kelasId", "lapor", "tanggalKejadian", "kronologis", "waliKelasId", "waliKelasNama", "createdAt", "isRead"]
   };
 
   // Pastikan seluruh sheet ada (Auto-heal / Auto-provision jika ada sheet yang kurang)
@@ -302,7 +304,9 @@ function uploadFullDatabase(db, payload) {
     "CatatanPerkembangan": ["id", "siswaId", "tanggal", "catatan", "guruBkId"],
     "TahunPelajaran": ["id", "tahun", "semester", "isActive"],
     "Kelas": ["id", "namaKelas", "waliKelasId"],
-    "LogAktivitas": ["id", "timestamp", "userId", "namaUser", "role", "aktivitas", "detail"]
+    "LogAktivitas": ["id", "timestamp", "userId", "namaUser", "role", "aktivitas", "detail"],
+    "Kehadiran": ["id", "siswaId", "mingguKe", "bulan", "tahun", "hadir", "sakit", "izin", "alfa", "keterangan"],
+    "Pelaporan": ["id", "kelasId", "lapor", "tanggalKejadian", "kronologis", "waliKelasId", "waliKelasNama", "createdAt", "isRead"]
   };
 
   for (var key in payload) {
