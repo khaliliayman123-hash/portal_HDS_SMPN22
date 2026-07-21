@@ -807,7 +807,20 @@ export default function SiswaView({
         const matchesSearch = nameStr.includes(q) || 
                               nisStr.includes(searchQuery) || 
                               nisnStr.includes(searchQuery);
-        const matchesKelas = selectedKelas === 'All' || s.kelasId === selectedKelas;
+        const matchesKelas = selectedKelas === 'All' || (() => {
+          const sKelasLower = String(s.kelasId || '').toLowerCase().trim();
+          const filterKelasLower = String(selectedKelas).toLowerCase().trim();
+          if (sKelasLower === filterKelasLower) return true;
+          
+          // Try to resolve both to their class object
+          const sKelasObj = db.kelas.find(k => k.id === s.kelasId || k.namaKelas.toLowerCase().trim() === sKelasLower);
+          const filterKelasObj = db.kelas.find(k => k.id === selectedKelas || k.namaKelas.toLowerCase().trim() === filterKelasLower);
+          
+          if (sKelasObj && filterKelasObj) {
+            return sKelasObj.id === filterKelasObj.id;
+          }
+          return false;
+        })();
         const matchesGender = selectedGender === 'All' || s.jenisKelamin === selectedGender;
         return matchesSearch && matchesKelas && matchesGender;
       })

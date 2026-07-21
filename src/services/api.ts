@@ -81,307 +81,52 @@ const INITIAL_DATABASE: DatabaseState = {
   ],
   jurusan: [],
   kelas: [
-    // Kelas 7-1 s.d. 7-11
-    { id: 'kl-1', namaKelas: 'Kelas 7-1', waliKelasId: 'usr-3' },
-    { id: 'kl-2', namaKelas: 'Kelas 7-2', waliKelasId: 'usr-3' },
-    { id: 'kl-3', namaKelas: 'Kelas 7-3', waliKelasId: 'usr-3' },
-    { id: 'kl-4', namaKelas: 'Kelas 7-4', waliKelasId: 'usr-3' },
-    { id: 'kl-5', namaKelas: 'Kelas 7-5', waliKelasId: 'usr-3' },
-    { id: 'kl-6', namaKelas: 'Kelas 7-6', waliKelasId: 'usr-3' },
-    { id: 'kl-7', namaKelas: 'Kelas 7-7', waliKelasId: 'usr-3' },
+    // Kelas 7-1 s.d. 7-8
+    { id: 'kl-1', namaKelas: 'Kelas 7-1', waliKelasId: 'wk-7-1' },
+    { id: 'kl-2', namaKelas: 'Kelas 7-2', waliKelasId: 'wk-7-2' },
+    { id: 'kl-3', namaKelas: 'Kelas 7-3', waliKelasId: 'wk-7-3' },
+    { id: 'kl-4', namaKelas: 'Kelas 7-4', waliKelasId: 'wk-7-4' },
+    { id: 'kl-5', namaKelas: 'Kelas 7-5', waliKelasId: 'wk-7-5' },
+    { id: 'kl-6', namaKelas: 'Kelas 7-6', waliKelasId: 'wk-7-6' },
+    { id: 'kl-7', namaKelas: 'Kelas 7-7', waliKelasId: 'wk-7-7' },
     { id: 'kl-8', namaKelas: 'Kelas 7-8', waliKelasId: 'wk-7-8' },
-    { id: 'kl-9', namaKelas: 'Kelas 7-9', waliKelasId: 'usr-3' },
-    { id: 'kl-10', namaKelas: 'Kelas 7-10', waliKelasId: 'usr-3' },
-    { id: 'kl-11', namaKelas: 'Kelas 7-11', waliKelasId: 'usr-3' },
-    // Kelas 8-1 s.d. 8-11
-    { id: 'kl-12', namaKelas: 'Kelas 8-1', waliKelasId: 'usr-5' },
-    { id: 'kl-13', namaKelas: 'Kelas 8-2', waliKelasId: 'usr-5' },
-    { id: 'kl-14', namaKelas: 'Kelas 8-3', waliKelasId: 'usr-5' },
-    { id: 'kl-15', namaKelas: 'Kelas 8-4', waliKelasId: 'usr-5' },
-    { id: 'kl-16', namaKelas: 'Kelas 8-5', waliKelasId: 'usr-5' },
-    { id: 'kl-17', namaKelas: 'Kelas 8-6', waliKelasId: 'usr-5' },
-    { id: 'kl-18', namaKelas: 'Kelas 8-7', waliKelasId: 'usr-5' },
-    { id: 'kl-19', namaKelas: 'Kelas 8-8', waliKelasId: 'usr-5' },
-    { id: 'kl-20', namaKelas: 'Kelas 8-9', waliKelasId: 'usr-5' },
-    { id: 'kl-21', namaKelas: 'Kelas 8-10', waliKelasId: 'usr-5' },
-    { id: 'kl-22', namaKelas: 'Kelas 8-11', waliKelasId: 'usr-5' },
-    // Kelas 9-1 s.d. 9-11
-    { id: 'kl-23', namaKelas: 'Kelas 9-1', waliKelasId: 'usr-3' },
-    { id: 'kl-24', namaKelas: 'Kelas 9-2', waliKelasId: 'usr-3' },
-    { id: 'kl-25', namaKelas: 'Kelas 9-3', waliKelasId: 'usr-3' },
-    { id: 'kl-26', namaKelas: 'Kelas 9-4', waliKelasId: 'usr-3' },
-    { id: 'kl-27', namaKelas: 'Kelas 9-5', waliKelasId: 'usr-3' },
-    { id: 'kl-28', namaKelas: 'Kelas 9-6', waliKelasId: 'usr-3' },
-    { id: 'kl-29', namaKelas: 'Kelas 9-7', waliKelasId: 'usr-3' },
-    { id: 'kl-30', namaKelas: 'Kelas 9-8', waliKelasId: 'usr-3' },
-    { id: 'kl-31', namaKelas: 'Kelas 9-9', waliKelasId: 'usr-3' },
-    { id: 'kl-32', namaKelas: 'Kelas 9-10', waliKelasId: 'usr-3' },
-    { id: 'kl-33', namaKelas: 'Kelas 9-11', waliKelasId: 'usr-3' },
+    // Kelas 8-1 s.d. 8-7
+    { id: 'kl-9', namaKelas: 'Kelas 8-1', waliKelasId: 'wk-8-1' },
+    { id: 'kl-10', namaKelas: 'Kelas 8-2', waliKelasId: 'wk-8-2' },
+    { id: 'kl-11', namaKelas: 'Kelas 8-3', waliKelasId: 'wk-8-3' },
+    { id: 'kl-12', namaKelas: 'Kelas 8-4', waliKelasId: 'wk-8-4' },
+    { id: 'kl-13', namaKelas: 'Kelas 8-5', waliKelasId: 'wk-8-5' },
+    { id: 'kl-14', namaKelas: 'Kelas 8-6', waliKelasId: 'wk-8-6' },
+    { id: 'kl-15', namaKelas: 'Kelas 8-7', waliKelasId: 'wk-8-7' },
+    // Kelas 9-1 s.d. 9-7
+    { id: 'kl-16', namaKelas: 'Kelas 9-1', waliKelasId: 'wk-9-1' },
+    { id: 'kl-17', namaKelas: 'Kelas 9-2', waliKelasId: 'wk-9-2' },
+    { id: 'kl-18', namaKelas: 'Kelas 9-3', waliKelasId: 'wk-9-3' },
+    { id: 'kl-19', namaKelas: 'Kelas 9-4', waliKelasId: 'wk-9-4' },
+    { id: 'kl-20', namaKelas: 'Kelas 9-5', waliKelasId: 'wk-9-5' },
+    { id: 'kl-21', namaKelas: 'Kelas 9-6', waliKelasId: 'wk-9-6' },
+    { id: 'kl-22', namaKelas: 'Kelas 9-7', waliKelasId: 'wk-9-7' },
   ],
-  siswa: [
-    {
-      id: 'sis-1',
-      nis: '23241001',
-      nisn: '0071234561',
-      nama: 'Aditya Pratama',
-      jenisKelamin: 'Laki-laki',
-      tempatLahir: 'Jakarta',
-      tanggalLahir: '2013-05-12',
-      agama: 'Islam',
-      alamat: 'Jl. Merdeka No. 45, Kebon Jeruk',
-      desa: 'Kebon Jeruk',
-      kecamatan: 'Kebon Jeruk',
-      kabupaten: 'Jakarta Barat',
-      provinsi: 'DKI Jakarta',
-      nomorHp: '081234567890',
-      email: 'aditya.pratama@student.sch.id',
-      kelasId: 'kl-1',
-      jurusanId: '',
-      tahunMasuk: '2025',
-      tahunPelajaran: '2025/2026',
-    },
-    {
-      id: 'sis-2',
-      nis: '23241002',
-      nisn: '0071234562',
-      nama: 'Bella Amanda',
-      jenisKelamin: 'Perempuan',
-      tempatLahir: 'Bandung',
-      tanggalLahir: '2013-09-21',
-      agama: 'Kristen',
-      alamat: 'Perum Gading Indah Blok C/12',
-      desa: 'Pasirjati',
-      kecamatan: 'Ujung Berung',
-      kabupaten: 'Bandung',
-      provinsi: 'Jawa Barat',
-      nomorHp: '082345678901',
-      email: 'bella.amanda@student.sch.id',
-      kelasId: 'kl-2',
-      jurusanId: '',
-      tahunMasuk: '2025',
-      tahunPelajaran: '2025/2026',
-    },
-    {
-      id: 'sis-3',
-      nis: '23241003',
-      nisn: '0071234563',
-      nama: 'Candra Wijaya',
-      jenisKelamin: 'Laki-laki',
-      tempatLahir: 'Surabaya',
-      tanggalLahir: '2012-11-03',
-      agama: 'Islam',
-      alamat: 'Jl. Diponegoro Gg. 3 No. 9',
-      desa: 'Sawahan',
-      kecamatan: 'Sawahan',
-      kabupaten: 'Surabaya',
-      provinsi: 'Jawa Timur',
-      nomorHp: '083456789012',
-      email: 'candra.wijaya@student.sch.id',
-      kelasId: 'kl-12',
-      jurusanId: '',
-      tahunMasuk: '2024',
-      tahunPelajaran: '2024/2025',
-    },
-    {
-      id: 'sis-4',
-      nis: '23241004',
-      nisn: '0071234564',
-      nama: 'Dian Lestari',
-      jenisKelamin: 'Perempuan',
-      tempatLahir: 'Yogyakarta',
-      tanggalLahir: '2011-03-15',
-      agama: 'Islam',
-      alamat: 'Kampung Sastrodirjan GT II/412',
-      desa: 'Sosromenduran',
-      kecamatan: 'Gedongtengen',
-      kabupaten: 'Yogyakarta',
-      provinsi: 'DI Yogyakarta',
-      nomorHp: '084567890123',
-      email: 'dian.lestari@student.sch.id',
-      kelasId: 'kl-13',
-      jurusanId: '',
-      tahunMasuk: '2023',
-      tahunPelajaran: '2023/2024',
-    },
-  ],
-  orangTua: [
-    {
-      id: 'sis-1',
-      namaAyah: 'Suparno Pratama',
-      statusAyah: 'Hidup',
-      tempatLahirAyah: 'Jakarta',
-      tanggalLahirAyah: '1978-04-15',
-      alamatAyah: 'Jl. Merdeka No. 45, Kebon Jeruk',
-      agamaAyah: 'Islam',
-      pendidikanAyah: 'S1',
-      pekerjaanAyah: 'Wiraswasta',
-      noHpAyah: '081234567801',
-      namaIbu: 'Endang Lestari',
-      statusIbu: 'Hidup',
-      tempatLahirIbu: 'Surakarta',
-      tanggalLahirIbu: '1981-08-20',
-      alamatIbu: 'Jl. Merdeka No. 45, Kebon Jeruk',
-      agamaIbu: 'Islam',
-      pendidikanIbu: 'SMA',
-      pekerjaanIbu: 'Ibu Rumah Tangga',
-      noHpIbu: '081234567802',
-      wali: '',
-      penghasilan: 'Rp 4.000.000 - Rp 6.000.000',
-      pendidikanOrangTua: 'S1'
-    },
-    {
-      id: 'sis-2',
-      namaAyah: 'Herman Wijaya',
-      statusAyah: 'Hidup',
-      tempatLahirAyah: 'Bandung',
-      tanggalLahirAyah: '1975-12-05',
-      alamatAyah: 'Perum Gading Indah Blok C/12',
-      agamaAyah: 'Kristen',
-      pendidikanAyah: 'D3',
-      pekerjaanAyah: 'Karyawan Swasta',
-      noHpAyah: '082345678911',
-      namaIbu: 'Maria Ulfa',
-      statusIbu: 'Hidup',
-      tempatLahirIbu: 'Bandung',
-      tanggalLahirIbu: '1978-03-25',
-      alamatIbu: 'Perum Gading Indah Blok C/12',
-      agamaIbu: 'Kristen',
-      pendidikanIbu: 'D3',
-      pekerjaanIbu: 'Guru',
-      noHpIbu: '082345678912',
-      wali: '',
-      penghasilan: 'Rp 6.000.000 - Rp 10.000.000',
-      pendidikanOrangTua: 'D3'
-    },
-    {
-      id: 'sis-3',
-      namaAyah: 'Agus Wijaya',
-      statusAyah: 'Hidup',
-      tempatLahirAyah: 'Surabaya',
-      tanggalLahirAyah: '1970-10-10',
-      alamatAyah: 'Jl. Diponegoro Gg. 3 No. 9',
-      agamaAyah: 'Islam',
-      pendidikanAyah: 'SMA',
-      pekerjaanAyah: 'Buruh',
-      noHpAyah: '083456789021',
-      namaIbu: 'Siti Aminah',
-      statusIbu: 'Meninggal',
-      tempatLahirIbu: 'Surabaya',
-      tanggalLahirIbu: '1973-05-12',
-      alamatIbu: 'Jl. Diponegoro Gg. 3 No. 9',
-      agamaIbu: 'Islam',
-      pendidikanIbu: 'SMP',
-      pekerjaanIbu: 'Almarhumah',
-      noHpIbu: '-',
-      wali: '',
-      penghasilan: 'Rp 2.000.000 - Rp 4.000.000',
-      pendidikanOrangTua: 'SMA'
-    },
-    {
-      id: 'sis-4',
-      namaAyah: 'Rahmat Hidayat',
-      statusAyah: 'Meninggal',
-      tempatLahirAyah: 'Yogyakarta',
-      tanggalLahirAyah: '1968-02-14',
-      alamatAyah: 'Kampung Sastrodirjan GT II/412',
-      agamaAyah: 'Islam',
-      pendidikanAyah: 'SMP',
-      pekerjaanAyah: 'Almarhum',
-      noHpAyah: '-',
-      namaIbu: 'Kartika Sari',
-      statusIbu: 'Hidup',
-      tempatLahirIbu: 'Yogyakarta',
-      tanggalLahirIbu: '1974-09-09',
-      alamatIbu: 'Kampung Sastrodirjan GT II/412',
-      agamaIbu: 'Islam',
-      pendidikanIbu: 'SMA',
-      pekerjaanIbu: 'Pedagang',
-      noHpIbu: '084567890124',
-      wali: 'Bambang Sudewo',
-      statusWali: 'Hidup',
-      tempatLahirWali: 'Yogyakarta',
-      tanggalLahirWali: '1965-06-20',
-      alamatWali: 'Jl. Malioboro No. 12',
-      agamaWali: 'Islam',
-      pendidikanWali: 'S1',
-      pekerjaanWali: 'PNS',
-      noHpWali: '084567890125',
-      penghasilan: 'Kurang dari Rp 2.000.000',
-      pendidikanOrangTua: 'SMP'
-    },
-  ],
-  akademik: [
-    { id: 'sis-1', semester: '1', rataRataRaport: 85.5, catatanWaliKelas: 'Sangat baik dalam pemrograman dasar.' },
-    { id: 'sis-2', semester: '1', rataRataRaport: 89.2, catatanWaliKelas: 'Pertahankan prestasi akademis.' },
-    { id: 'sis-3', semester: '3', rataRataRaport: 78.0, catatanWaliKelas: 'Tingkatkan fokus saat praktikum jaringan.' },
-    { id: 'sis-4', semester: '5', rataRataRaport: 92.4, catatanWaliKelas: 'Sangat berbakat di bidang desain grafis dan UI.' },
-  ],
-  kesehatan: [
-    { id: 'sis-1', tinggiBadan: 172, beratBadan: 64, golonganDarah: 'O', penyakit: '-', alergi: 'Debu', disabilitas: '-' },
-    { id: 'sis-2', tinggiBadan: 160, beratBadan: 52, golonganDarah: 'A', penyakit: '-', alergi: 'Seafood', disabilitas: '-' },
-    { id: 'sis-3', tinggiBadan: 168, beratBadan: 75, golonganDarah: 'B', penyakit: 'Maag', alergi: '-', disabilitas: '-' },
-    { id: 'sis-4', tinggiBadan: 158, beratBadan: 48, golonganDarah: 'AB', penyakit: 'Asma', alergi: 'Udara dingin', disabilitas: '-' },
-  ],
-  ekonomi: [
-    { id: 'sis-1', statusRumah: 'Milik Sendiri', penghasilan: 'Rp 4.000.000 - Rp 6.000.000', kendaraan: 'Motor', pip: false, pkh: false, kip: false },
-    { id: 'sis-2', statusRumah: 'Milik Sendiri', penghasilan: 'Rp 6.000.000 - Rp 10.000.000', kendaraan: 'Mobil & Motor', pip: false, pkh: false, kip: false },
-    { id: 'sis-3', statusRumah: 'Sewa / Kontrak', penghasilan: 'Rp 2.000.000 - Rp 4.000.000', kendaraan: 'Motor', pip: true, pkh: false, kip: true },
-    { id: 'sis-4', statusRumah: 'Sewa / Kontrak', penghasilan: 'Kurang dari Rp 2.000.000', kendaraan: 'Sepeda', pip: true, pkh: true, kip: true },
-  ],
-  psikologi: [
-    { id: 'sis-1', minat: 'Coding & Robotics', bakat: 'Logika & Analitis', hobi: 'Gaming, Membaca', gayaBelajar: 'Visual', citaCita: 'Software Engineer', kepribadian: 'Introvert (INTJ)' },
-    { id: 'sis-2', minat: 'Public Speaking', bakat: 'Komunikasi', hobi: 'Menulis, Organisasi', gayaBelajar: 'Auditory', citaCita: 'HR Manager', kepribadian: 'Extrovert (ENFJ)' },
-    { id: 'sis-3', minat: 'Hardware & Network', bakat: 'Keterampilan Mekanik', hobi: 'Bermain Musik', gayaBelajar: 'Kinestetik', citaCita: 'Network Engineer', kepribadian: 'Introvert (ISTP)' },
-    { id: 'sis-4', minat: 'Desain Komunikasi Visual', bakat: 'Seni Rupa & Estetika', hobi: 'Menggambar, Fotografi', gayaBelajar: 'Visual', citaCita: 'Art Director', kepribadian: 'Introvert (INFP)' },
-  ],
-  sosial: [
-    { id: 'sis-1', hubunganTeman: 'Sangat Baik', organisasi: 'OSIS (Staff IT)', masalahSosial: '-' },
-    { id: 'sis-2', hubunganTeman: 'Sangat Baik', organisasi: 'Pramuka (Bantara)', masalahSosial: '-' },
-    { id: 'sis-3', hubunganTeman: 'Kurang Bersosialisasi', organisasi: '-', masalahSosial: 'Sering menyendiri' },
-    { id: 'sis-4', hubunganTeman: 'Baik', organisasi: 'Majalah Dinding', masalahSosial: '-' },
-  ],
-  prestasi: [
-    { id: 'pres-1', siswaId: 'sis-4', namaPrestasi: 'Juara 1 Lomba Desain Poster Nasional', tingkat: 'Nasional', tahun: '2025', juara: 'Juara I', kategori: 'Non Akademik' },
-    { id: 'pres-2', siswaId: 'sis-1', namaPrestasi: 'Juara 2 Hackathon Pelajar Provinsi', tingkat: 'Provinsi', tahun: '2025', juara: 'Juara II', kategori: 'Akademik' },
-  ],
-  pelanggaran: [
-    { id: 'pel-1', siswaId: 'sis-3', tanggal: '2026-06-15', jenisPelanggaran: 'Merokok di area sekolah', kategori: 'Berat', poin: 75, guruPelapor: 'Arta Polta, S.Pd', tindakLanjut: 'Pemanggilan Orang Tua', status: 'Proses' },
-    { id: 'pel-2', siswaId: 'sis-3', tanggal: '2026-06-20', jenisPelanggaran: 'Terlambat masuk sekolah lebih dari 3 kali', kategori: 'Ringan', poin: 15, guruPelapor: 'Piket Guru', tindakLanjut: 'Teguran lisan & pembinaan', status: 'Selesai' },
-    { id: 'pel-3', siswaId: 'sis-3', tanggal: '2026-06-25', jenisPelanggaran: 'Bolos sekolah pada jam pelajaran produktif', kategori: 'Sedang', poin: 30, guruPelapor: 'Arta Polta, S.Pd', tindakLanjut: 'Konseling Individu & SP 1', status: 'Belum Ditindak' },
-    // Total points for sis-3 (Candra) will be 75 + 15 + 30 = 120 (Triggers the > 100 points alert!)
-    { id: 'pel-4', siswaId: 'sis-1', tanggal: '2026-06-10', jenisPelanggaran: 'Terlambat masuk sekolah', kategori: 'Ringan', poin: 5, guruPelapor: 'Piket Guru', tindakLanjut: 'Teguran lisan', status: 'Selesai' },
-  ],
-  remisiPoin: [
-    { id: 'rem-1', siswaId: 'sis-3', tanggal: '2026-06-26', jenisRemisi: 'Membantu Kerapian Perpustakaan', kategori: 'Karakter Baik', poin: 15, guruPemberi: 'Nur Jamilah Purwaningsih, S.Psi', keterangan: 'Siswa sangat rajin merapikan buku di perpustakaan sebagai bentuk perubahan perilaku positif.' }
-  ],
-  konseling: [
-    { id: 'kon-1', nomorKonseling: 'BK-2026-001', siswaId: 'sis-3', tanggal: '2026-06-18', jenis: 'Individu', guruBkId: 'usr-2', permasalahan: 'Merokok di area sekolah dan kedapatan membawa rokok.', analisis: 'Siswa mengalami tekanan pergaulan luar sekolah dan merasa stres karena masalah ekonomi keluarga.', solusi: 'Melakukan konseling relaksasi, menyepakati kontrak perilaku untuk berhenti merokok, dan menghubungkan ke program beasiswa sekolah.', hasil: 'Siswa kooperatif, berjanji mengurangi rokok, dan bersedia dipantau perkembangannya.', tindakLanjut: 'Pemantauan berkala bersama Wali Kelas.' },
-  ],
-  asesmen: [
-    { id: 'ase-1', siswaId: 'sis-1', akpd: 'Tinggi pemahaman diri, sedang penyesuaian sosial', dcm: 'Visual & Auditori', aum: 'Hambatan belajar ringan', iq: 125, bakat: 'Komputasi, Logika', minat: 'Sains, Teknologi' },
-    { id: 'ase-2', siswaId: 'sis-4', akpd: 'Tinggi minat seni, tinggi kemampuan karir', dcm: 'Kinestetik', aum: 'Tidak ada masalah berarti', iq: 118, bakat: 'Artistik, Komunikasi', minat: 'Seni Kreatif, Media' },
-  ],
-  homeVisit: [
-    { id: 'hv-1', siswaId: 'sis-3', tanggal: '2026-06-19', tujuan: 'Mengetahui kondisi lingkungan rumah dan dukungan orang tua terkait kasus pelanggaran merokok.', hasil: 'Orang tua menyambut baik dan berjanji akan memperketat pengawasan di rumah, serta berterima kasih atas informasi dari sekolah.' },
-  ],
-  surat: [
-    { id: 'sur-1', siswaId: 'sis-3', nomorSurat: '045/BK-SMK/VI/2026', tanggal: '2026-06-16', jenisSurat: 'Surat Panggilan', perihal: 'Undangan Pertemuan Wali Murid', isiSurat: 'Mengharap kehadiran Bapak/Ibu Wali Murid dari siswa Candra Wijaya ke ruang BK sekolah untuk membicarakan mengenai perkembangan putra Bapak/Ibu.' },
-  ],
-  dokumen: [
-    { id: 'dok-1', siswaId: 'sis-1', jenisDokumen: 'KK', namaFile: 'kk_aditya.pdf', tanggalUpload: '2025-07-15' },
-    { id: 'dok-2', siswaId: 'sis-1', jenisDokumen: 'Akta', namaFile: 'akta_aditya.pdf', tanggalUpload: '2025-07-15' },
-  ],
-  catatanPerkembangan: [
-    { id: 'cp-1', siswaId: 'sis-3', tanggal: '2026-06-22', catatan: 'Candra menunjukkan perilaku lebih rapi dan masuk kelas tepat waktu selama 3 hari terakhir.', guruBkId: 'usr-2' },
-  ],
+  siswa: [],
+  orangTua: [],
+  akademik: [],
+  kesehatan: [],
+  ekonomi: [],
+  psikologi: [],
+  sosial: [],
+  prestasi: [],
+  pelanggaran: [],
+  remisiPoin: [],
+  konseling: [],
+  asesmen: [],
+  homeVisit: [],
+  surat: [],
+  dokumen: [],
+  catatanPerkembangan: [],
   logAktivitas: [
-    { id: 'log-1', timestamp: '2026-06-28T09:00:00Z', userId: 'usr-1', namaUser: 'Nur Jamilah Purwaningsih, S.Psi', role: 'Admin', aktivitas: 'Login', detail: 'Berhasil masuk ke dalam sistem.' },
-    { id: 'log-2', timestamp: '2026-06-28T09:15:00Z', userId: 'usr-2', namaUser: 'Nur Jamilah Purwaningsih, S.Psi', role: 'Guru BK', aktivitas: 'Tambah Konseling', detail: 'Membuat rekaman konseling individu untuk Candra Wijaya.' },
+    { id: 'log-1', timestamp: new Date().toISOString(), userId: 'system', namaUser: 'Sistem HDS', role: 'System', aktivitas: 'Inisialisasi', detail: 'Sistem HDS berhasil dimulai dengan basis data bersih.' }
   ],
-  kehadiran: [
-    { id: 'att-1', siswaId: 'sis-1', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 5, sakit: 0, izin: 0, alfa: 0, keterangan: 'Hadir penuh' },
-    { id: 'att-2', siswaId: 'sis-3', mingguKe: 'Minggu 1', bulan: 'Juli', tahun: '2026', hadir: 4, sakit: 0, izin: 1, alfa: 0, keterangan: 'Izin urusan keluarga' }
-  ],
+  kehadiran: [],
   pelaporan: [],
 };
 
@@ -396,6 +141,34 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
 
   if (!parsed || typeof parsed !== 'object') {
     return { sanitized: { ...INITIAL_DATABASE }, migrated: true };
+  }
+
+  // Permanently purge all old default mock seed data (Aditya, Bella, Candra, Dian) from all lists and features,
+  // ensuring the user has a completely clean slate with only their inputted/synced data.
+  const seedIds = ['sis-1', 'sis-2', 'sis-3', 'sis-4'];
+  const hasSeedSiswa = parsed.siswa && Array.isArray(parsed.siswa) && parsed.siswa.some((s: any) => s && seedIds.includes(s.id));
+  if (hasSeedSiswa) {
+    parsed.siswa = (parsed.siswa || []).filter((s: any) => s && !seedIds.includes(s.id));
+    parsed.orangTua = (parsed.orangTua || []).filter((ot: any) => ot && !seedIds.includes(ot.id));
+    parsed.akademik = (parsed.akademik || []).filter((item: any) => item && !seedIds.includes(item.id));
+    parsed.kesehatan = (parsed.kesehatan || []).filter((item: any) => item && !seedIds.includes(item.id));
+    parsed.ekonomi = (parsed.ekonomi || []).filter((item: any) => item && !seedIds.includes(item.id));
+    parsed.psikologi = (parsed.psikologi || []).filter((item: any) => item && !seedIds.includes(item.id));
+    parsed.sosial = (parsed.sosial || []).filter((item: any) => item && !seedIds.includes(item.id));
+    
+    const filterBySiswaId = (arr: any[]) => (arr || []).filter((item: any) => item && !seedIds.includes(item.siswaId));
+    parsed.prestasi = filterBySiswaId(parsed.prestasi);
+    parsed.pelanggaran = filterBySiswaId(parsed.pelanggaran);
+    parsed.remisiPoin = filterBySiswaId(parsed.remisiPoin);
+    parsed.konseling = filterBySiswaId(parsed.konseling);
+    parsed.asesmen = filterBySiswaId(parsed.asesmen);
+    parsed.homeVisit = filterBySiswaId(parsed.homeVisit);
+    parsed.surat = filterBySiswaId(parsed.surat);
+    parsed.dokumen = filterBySiswaId(parsed.dokumen);
+    parsed.catatanPerkembangan = filterBySiswaId(parsed.catatanPerkembangan);
+    parsed.kehadiran = filterBySiswaId(parsed.kehadiran);
+    
+    migrated = true;
   }
 
   // Ensure config block is present
@@ -652,18 +425,18 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   const redirectKelasIdMap: { [oldId: string]: string } = {};
   const standardKelasMap: { [key: string]: string } = {};
   
-  // Map our standard 33 class short names to standard IDs 'kl-1' through 'kl-33'
-  for (let i = 1; i <= 11; i++) {
+  // Map our standard 22 class short names to standard IDs 'kl-1' through 'kl-22'
+  for (let i = 1; i <= 8; i++) {
     standardKelasMap[`7-${i}`] = `kl-${i}`;
     standardKelasMap[`Kelas 7-${i}`] = `kl-${i}`;
   }
-  for (let i = 1; i <= 11; i++) {
-    standardKelasMap[`8-${i}`] = `kl-${i + 11}`;
-    standardKelasMap[`Kelas 8-${i}`] = `kl-${i + 11}`;
+  for (let i = 1; i <= 7; i++) {
+    standardKelasMap[`8-${i}`] = `kl-${i + 8}`;
+    standardKelasMap[`Kelas 8-${i}`] = `kl-${i + 8}`;
   }
-  for (let i = 1; i <= 11; i++) {
-    standardKelasMap[`9-${i}`] = `kl-${i + 22}`;
-    standardKelasMap[`Kelas 9-${i}`] = `kl-${i + 22}`;
+  for (let i = 1; i <= 7; i++) {
+    standardKelasMap[`9-${i}`] = `kl-${i + 15}`;
+    standardKelasMap[`Kelas 9-${i}`] = `kl-${i + 15}`;
   }
 
   // Helper function to normalize any class name, handling all Google Sheets locale time and date parsing side-effects
@@ -796,7 +569,7 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
   const seenClassNames = new Set<string>();
   const uniqueClasses: any[] = [];
 
-  // Sort them so that standard IDs ('kl-1' through 'kl-33') come first, ensuring they are preserved as the primary objects
+  // Sort them so that standard IDs ('kl-1' through 'kl-22') come first, ensuring they are preserved as the primary objects
   const sortedClasses = [...parsed.kelas].sort((a: any, b: any) => {
     const isAStandard = a && a.id && a.id.startsWith('kl-');
     const isBStandard = b && b.id && b.id.startsWith('kl-');
@@ -873,36 +646,22 @@ export function sanitizeDatabaseState(parsed: any): { sanitized: DatabaseState; 
     return p;
   });
 
-  // If jurusan is not empty, clear it (only in offline mode, so we don't wipe out real sheet data)
-  const activeGasUrl = (parsed?.config?.gasApiUrl || currentDatabase?.config?.gasApiUrl || '').toString().trim();
-  if (!activeGasUrl) {
-    if (parsed.jurusan && parsed.jurusan.length > 0) {
-      parsed.jurusan = [];
-      migrated = true;
-    }
-
-    // Check if classes are high school (e.g., has 'RPL', 'TKJ', 'DKV') or if they don't match our new grades (33 rombel)
-    const hasHighSchoolClasses = parsed.kelas.some((k: any) => 
-      k && k.namaKelas && (k.namaKelas.includes('RPL') || k.namaKelas.includes('TKJ') || k.namaKelas.includes('DKV'))
-    );
-    if (hasHighSchoolClasses || parsed.kelas.length < 33 || parsed.siswa.length === 0) {
-      parsed.kelas = [...INITIAL_DATABASE.kelas];
-      parsed.siswa = [...INITIAL_DATABASE.siswa];
-      parsed.orangTua = [...INITIAL_DATABASE.orangTua];
-      migrated = true;
-    }
+  // Clear jurusan if not empty (we do not use jurusan in this SMP project)
+  if (parsed.jurusan && parsed.jurusan.length > 0) {
+    parsed.jurusan = [];
+    migrated = true;
   }
 
-  // Double check that all mock siswa records have expanded parent fields initialized
-  parsed.orangTua = parsed.orangTua.map((ot: any) => {
-    if (!ot) return ot;
-    const matchingSeed = INITIAL_DATABASE.orangTua.find(s => s.id === ot.id);
-    if (matchingSeed && !ot.statusAyah) {
-      migrated = true;
-      return { ...matchingSeed };
-    }
-    return ot;
-  });
+  // Ensure all 22 standard classes are present
+  const hasHighSchoolClasses = parsed.kelas.some((k: any) => 
+    k && k.namaKelas && (k.namaKelas.includes('RPL') || k.namaKelas.includes('TKJ') || k.namaKelas.includes('DKV'))
+  );
+  if (hasHighSchoolClasses || parsed.kelas.length < 22) {
+    parsed.kelas = [...INITIAL_DATABASE.kelas];
+    migrated = true;
+  }
+
+
 
   // Ensure every student record matches standard types and has basic info
   parsed.siswa = parsed.siswa.map((s: any) => {
@@ -1319,8 +1078,9 @@ export const apiService = {
       if (res.success && res.data) {
         // Cegah penimpaan data lokal jika database di Google Sheets kosong (belum di-seeding)
         const isEmptyRemote = 
-          (!res.data.users || res.data.users.length === 0) && 
-          (!res.data.siswa || res.data.siswa.length === 0);
+          (!res.data.users || res.data.users.length === 0) || 
+          (!res.data.siswa || res.data.siswa.length === 0) ||
+          (!res.data.kelas || res.data.kelas.length === 0);
 
         if (isEmptyRemote) {
           lastFetchSuccessful = true;

@@ -112,6 +112,7 @@ export default function KonselingView({
   const [localActiveTab, setLocalActiveTab] = useState<CounselingSubTab>('konseling');
   
   const activeTab = externalActiveTab || localActiveTab;
+  const canModifyActiveTab = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.GURU_BK || (currentUser.role === UserRole.WALI_KELAS && activeTab === 'kehadiran');
   const setActiveTab = (tab: CounselingSubTab) => {
     if (onTabChange) {
       onTabChange(tab);
@@ -175,7 +176,7 @@ export default function KonselingView({
 
   // Reset states and open editor modal
   const openEditor = (entity: any | null) => {
-    if (!canModify) return;
+    if (!canModifyActiveTab) return;
     const isNew = !entity;
     setEditingId(isNew ? null : entity.id);
 
@@ -304,7 +305,7 @@ export default function KonselingView({
   };
 
   const handleDelete = (id: string) => {
-    if (!canModify) return;
+    if (!canModifyActiveTab) return;
     setDeleteConfirmId(id);
   };
 
@@ -388,12 +389,22 @@ export default function KonselingView({
         // Class Filter
         if (selectedKehadiranKelas !== 'all') {
           if (!siswa) return false;
-          const sKelasId = String(siswa.kelasId).toLowerCase().trim();
-          const filterId = String(selectedKehadiranKelas).toLowerCase().trim();
-          const sKelasNama = findKelasNama(siswa).toLowerCase().trim();
-          if (sKelasId !== filterId && sKelasNama !== filterId) {
+          const matches = (() => {
+            const sKelasLower = String(siswa.kelasId || '').toLowerCase().trim();
+            const filterKelasLower = String(selectedKehadiranKelas).toLowerCase().trim();
+            if (sKelasLower === filterKelasLower) return true;
+            
+            // Try to resolve both to their class object
+            const sKelasObj = db.kelas.find(k => k.id === siswa.kelasId || k.namaKelas.toLowerCase().trim() === sKelasLower);
+            const filterKelasObj = db.kelas.find(k => k.id === selectedKehadiranKelas || k.namaKelas.toLowerCase().trim() === filterKelasLower);
+            
+            if (sKelasObj && filterKelasObj) {
+              return sKelasObj.id === filterKelasObj.id;
+            }
             return false;
-          }
+          })();
+          
+          if (!matches) return false;
         }
 
         const siswaNama = String(siswa?.nama || 'Siswa Tidak Ditemukan').toLowerCase();
@@ -736,6 +747,219 @@ export default function KonselingView({
     const a = document.createElement('a');
     a.href = url;
     a.download = `Laporan_Kehadiran_${siswa?.nama.replace(/\s+/g, '_') || 'Siswa'}_${att.mingguKe.replace(/\s+/g, '_')}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // Function to download individual student counseling report as Word Doc
+  const handleDownloadIndividualKonseling = (k: any) => {
+    const siswa = findSiswa(k.siswaId);
+    const kelasNama = findKelasNama(siswa);
+    const guruBk = db.users?.find(u => u.id === k.guruBkId)?.nama || currentUser.nama;
+    
+    const dateTodayStr = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const wordContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset="utf-8">
+        <title>Laporan Layanan Bimbingan Konseling</title>
+        <style>
+          @page Section1 {
+            size: 595.3pt 841.9pt;
+            margin: 72.0pt 72.0pt 72.0pt 72.0pt;
+            mso-header-margin: 36.0pt;
+            mso-footer-margin: 36.0pt;
+            mso-paper-source: 0;
+          }
+          div.Section1 { page: Section1; }
+          body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333333;
+          }
+          .kop-surat {
+            text-align: center;
+            border-bottom: 3px double #000000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          .kop-prov {
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 0;
+          }
+          .kop-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 2px 0;
+          }
+          .kop-addr {
+            font-size: 8.5pt;
+            color: #555555;
+            margin: 0;
+          }
+          .title {
+            text-align: center;
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            text-decoration: underline;
+          }
+          .subtitle {
+            text-align: center;
+            font-size: 10pt;
+            margin-bottom: 25px;
+            color: #555555;
+          }
+          .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          .info-table td {
+            padding: 4px 0;
+            vertical-align: top;
+          }
+          .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+          }
+          .data-table th {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 10pt;
+            width: 150px;
+          }
+          .data-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: left;
+            font-size: 10pt;
+          }
+          .sig-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+          }
+          .sig-table td {
+            text-align: center;
+            width: 50%;
+            font-size: 10pt;
+          }
+          .sig-space {
+            height: 70px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="Section1">
+          <div class="kop-surat">
+            <div class="kop-prov">PEMERINTAH KOTA TANGERANG SELATAN</div>
+            <div class="kop-prov">DINAS PENDIDIKAN DAN KEBUDAYAAN</div>
+            <div class="kop-title">UPTD SMP NEGERI 22 KOTA TANGERANG SELATAN</div>
+            <div class="kop-addr">Jalan Nurul Ikhlas, Gang Poris Perigi, RT.7/RW.5, Kelurahan Lengkong Karya, Kecamatan Serpong Utara, Kota Tangerang Selatan, Banten | Email: info@smpn22kotatangsel.sch.id</div>
+          </div>
+
+          <div class="title">LAPORAN LAYANAN BIMBINGAN KONSELING</div>
+          <div class="subtitle">Nomor Layanan: ${k.nomorKonseling || '-'}</div>
+
+          <h3 style="font-size: 11pt; font-weight: bold; margin-top: 10px; margin-bottom: 8px;">IDENTITAS SISWA</h3>
+          <table class="info-table">
+            <tr>
+              <td style="width: 130px; font-weight: bold;">Nama Siswa</td>
+              <td style="width: 15px;">:</td>
+              <td><b>${siswa?.nama || '-'}</b></td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold;">NIS / NISN</td>
+              <td>:</td>
+              <td>${siswa?.nis || '-'} / ${siswa?.nisn || '-'}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold;">Kelas</td>
+              <td>:</td>
+              <td>${kelasNama || 'Tanpa Kelas'}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size: 11pt; font-weight: bold; margin-top: 20px; margin-bottom: 8px;">RINCIAN LAYANAN KONSELING</h3>
+          <table class="data-table">
+            <tr>
+              <th>Nomor Konseling</th>
+              <td>${k.nomorKonseling || '-'}</td>
+            </tr>
+            <tr>
+              <th>Tanggal Layanan</th>
+              <td>${k.tanggal || '-'}</td>
+            </tr>
+            <tr>
+              <th>Jenis Layanan</th>
+              <td>${k.jenis || '-'}</td>
+            </tr>
+            <tr>
+              <th>Permasalahan</th>
+              <td>${k.permasalahan || '-'}</td>
+            </tr>
+            <tr>
+              <th>Faktor Penyebab (Analisis)</th>
+              <td>${k.analisis || '-'}</td>
+            </tr>
+            <tr>
+              <th>Solusi / Bimbingan</th>
+              <td>${k.solusi || '-'}</td>
+            </tr>
+            <tr>
+              <th>Hasil / Output</th>
+              <td>${k.hasil || '-'}</td>
+            </tr>
+            <tr>
+              <th>Tindak Lanjut</th>
+              <td>${k.tindakLanjut || '-'}</td>
+            </tr>
+          </table>
+
+          <table class="sig-table">
+            <tr>
+              <td>
+                <div>Mengetahui,</div>
+                <div>Kepala UPTD SMPN 22</div>
+                <div class="sig-space"></div>
+                <div><b><u>( ___________________________ )</u></b></div>
+                <div style="font-size: 8.5pt; color: #666;">NIP. .................................................</div>
+              </td>
+              <td>
+                <div>Tangerang Selatan, ${dateTodayStr}</div>
+                <div>Guru Bimbingan Konseling</div>
+                <div class="sig-space"></div>
+                <div><b><u>${guruBk}</u></b></div>
+                <div style="font-size: 8.5pt; color: #666;">NIP. .................................................</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_Konseling_${siswa?.nama.replace(/\s+/g, '_') || 'Siswa'}_${(k.nomorKonseling || '').replace(/\//g, '_')}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1377,42 +1601,46 @@ export default function KonselingView({
       {/* Dynamic Sub Tab Selector Navigation */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-wrap bg-white p-1 rounded-xl border border-slate-100 shadow-sm text-xs font-semibold text-slate-500">
-          <button 
-            onClick={() => { setActiveTab('konseling'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'konseling' ? 'bg-emerald-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <MessageSquare size={14} /> Layanan Konseling
-          </button>
-          <button 
-            onClick={() => { setActiveTab('pelanggaran'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'pelanggaran' ? 'bg-rose-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <AlertTriangle size={14} /> Kedisiplinan & Poin
-          </button>
-          <button 
-            onClick={() => { setActiveTab('remisi'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'remisi' ? 'bg-sky-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <Heart size={14} className={activeTab === 'remisi' ? 'text-white' : 'text-sky-500'} /> Remisi Poin
-          </button>
-          <button 
-            onClick={() => { setActiveTab('prestasi'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'prestasi' ? 'bg-amber-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <Award size={14} /> Rekam Prestasi
-          </button>
-          <button 
-            onClick={() => { setActiveTab('asesmen'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'asesmen' ? 'bg-teal-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <Activity size={14} /> Asesmen BK
-          </button>
-          <button 
-            onClick={() => { setActiveTab('homevisit'); setSearchQuery(''); }}
-            className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'homevisit' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
-          >
-            <Home size={14} /> Kunjungan Rumah
-          </button>
+          {(currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.GURU_BK) && (
+            <>
+              <button 
+                onClick={() => { setActiveTab('konseling'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'konseling' ? 'bg-emerald-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <MessageSquare size={14} /> Layanan Konseling
+              </button>
+              <button 
+                onClick={() => { setActiveTab('pelanggaran'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'pelanggaran' ? 'bg-rose-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <AlertTriangle size={14} /> Kedisiplinan & Poin
+              </button>
+              <button 
+                onClick={() => { setActiveTab('remisi'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'remisi' ? 'bg-sky-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <Heart size={14} className={activeTab === 'remisi' ? 'text-white' : 'text-sky-500'} /> Remisi Poin
+              </button>
+              <button 
+                onClick={() => { setActiveTab('prestasi'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'prestasi' ? 'bg-amber-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <Award size={14} /> Rekam Prestasi
+              </button>
+              <button 
+                onClick={() => { setActiveTab('asesmen'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'asesmen' ? 'bg-teal-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <Activity size={14} /> Asesmen BK
+              </button>
+              <button 
+                onClick={() => { setActiveTab('homevisit'); setSearchQuery(''); }}
+                className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'homevisit' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
+              >
+                <Home size={14} /> Kunjungan Rumah
+              </button>
+            </>
+          )}
           <button 
             onClick={() => { setActiveTab('kehadiran'); setSearchQuery(''); }}
             className={`px-4 py-2 rounded-lg flex items-center gap-1.5 transition ${activeTab === 'kehadiran' ? 'bg-cyan-600 text-white shadow-sm' : 'hover:bg-slate-50'}`}
@@ -1432,7 +1660,7 @@ export default function KonselingView({
           </button>
         </div>
 
-        {canModify && activeTab !== 'pelaporan' && (
+        {canModifyActiveTab && activeTab !== 'pelaporan' && (
           <button 
             onClick={() => openEditor(null)}
             className={`text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 transition-all duration-200 ${
@@ -1524,6 +1752,7 @@ export default function KonselingView({
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-1.5">
+                            <button onClick={() => handleDownloadIndividualKonseling(k)} className="p-1 text-emerald-600 hover:text-emerald-800" title="Unduh Laporan DOC"><FileDown size={14} /></button>
                             {canModify && (
                               <>
                                 <button onClick={() => openEditor(k)} className="p-1 text-slate-500 hover:text-slate-800"><Edit3 size={14} /></button>
@@ -2066,7 +2295,7 @@ export default function KonselingView({
                             </td>
                             <td className="py-3 px-4 text-center">
                               <div className="flex justify-center gap-1.5">
-                                {canModify && (
+                                {canModifyActiveTab && (
                                   <>
                                     <button onClick={() => openEditor(att)} className="p-1 text-slate-500 hover:text-slate-800"><Edit3 size={14} /></button>
                                     <button onClick={() => handleDelete(att.id)} className="p-1 text-rose-500 hover:text-rose-700"><Trash2 size={14} /></button>
@@ -2214,7 +2443,7 @@ export default function KonselingView({
                   <option value="" disabled>-- Pilih Siswa --</option>
                   {(db.siswa || []).map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.nama} ({db.kelas.find(k => k.id === s.kelasId)?.namaKelas || 'Tanpa Kelas'})
+                      {s.nama} ({findKelasNama(s)})
                     </option>
                   ))}
                 </select>

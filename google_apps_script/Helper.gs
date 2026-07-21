@@ -342,11 +342,12 @@ function uploadFullDatabase(db, payload) {
     if (sheet) {
       // Clear all rows below header
       var lastRow = sheet.getLastRow();
+      var headers = schema[sheetName];
       if (lastRow > 1) {
-        sheet.deleteRows(2, lastRow - 1);
+        var lastCol = sheet.getLastColumn() || headers.length;
+        sheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
       } else if (lastRow === 0) {
         // Terapkan headers jika kosong total
-        var headers = schema[sheetName];
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
         sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#e2e8f0");
       }
@@ -365,6 +366,11 @@ function uploadFullDatabase(db, payload) {
         });
         
         if (rowsToAdd.length > 0) {
+          var maxRows = sheet.getMaxRows();
+          var requiredRows = rowsToAdd.length + 1; // +1 untuk baris header
+          if (maxRows < requiredRows) {
+            sheet.insertRowsAfter(maxRows, requiredRows - maxRows);
+          }
           sheet.getRange(2, 1, rowsToAdd.length, headers.length).setValues(rowsToAdd);
         }
       }

@@ -118,7 +118,7 @@ export default function App() {
 
   // Enforce Wali Kelas restricted view
   useEffect(() => {
-    if (currentUser && currentUser.role === UserRole.WALI_KELAS && activeMenu !== 'walikelas') {
+    if (currentUser && currentUser.role === UserRole.WALI_KELAS && activeMenu !== 'walikelas' && activeMenu !== 'layanan') {
       setActiveMenu('walikelas');
     }
   }, [currentUser, activeMenu]);
@@ -692,12 +692,20 @@ export default function App() {
                 <BookOpen size={16} /> Profil Saya (HDS)
               </button>
             ) : currentUser.role === UserRole.WALI_KELAS ? (
-              <button 
-                onClick={() => { setActiveMenu('walikelas'); setDeepLinkSiswaId(undefined); }}
-                className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'walikelas' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
-              >
-                <GraduationCap size={16} /> Ruang Wali Kelas
-              </button>
+              <>
+                <button 
+                  onClick={() => { setActiveMenu('walikelas'); setDeepLinkSiswaId(undefined); }}
+                  className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'walikelas' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
+                >
+                  <GraduationCap size={16} /> Ruang Wali Kelas
+                </button>
+                <button 
+                  onClick={() => { setActiveMenu('layanan'); setLayananActiveTab('kehadiran'); }}
+                  className={`p-3 rounded-xl text-left flex items-center gap-3 transition cursor-pointer ${activeMenu === 'layanan' ? 'bg-emerald-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
+                >
+                  <MessageSquare size={16} /> Layanan BK & Disiplin
+                </button>
+              </>
             ) : (
               <>
                 <button 
@@ -780,7 +788,10 @@ export default function App() {
             {currentUser.role === UserRole.SISWA ? (
               <button onClick={() => { setActiveMenu('siswa'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Profil Saya (HDS)</button>
             ) : currentUser.role === UserRole.WALI_KELAS ? (
-              <button onClick={() => { setActiveMenu('walikelas'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Ruang Wali Kelas</button>
+              <>
+                <button onClick={() => { setActiveMenu('walikelas'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Ruang Wali Kelas</button>
+                <button onClick={() => { setActiveMenu('layanan'); setLayananActiveTab('kehadiran'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Layanan BK & Disiplin</button>
+              </>
             ) : (
               <>
                 <button onClick={() => { setActiveMenu('dashboard'); setMobileMenuOpen(false); }} className="p-2.5 rounded-lg text-left hover:bg-slate-800">Dashboard Evaluasi</button>
